@@ -12,6 +12,7 @@
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "@types/react-router-dom": "^5.3.3",
+    "@types/react-toastify": "^4.0.2",
     "axios": "^1.13.2",
     "chart.js": "^4.4.0",
     "jwt-decode": "^4.0.0",
