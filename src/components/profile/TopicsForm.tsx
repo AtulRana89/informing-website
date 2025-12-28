@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { apiService } from "../../services";
 
 // Types
 interface SubTopic {
@@ -35,78 +36,7 @@ const topicsSchema = z.object({
 
 type TopicsFormData = z.infer<typeof topicsSchema>;
 
-// Mock API service
-const apiService = {
-  get: async (url: string) => {
-    // Mock response
-    return {
-      data: {
-        response: {
-          data: {
-            list: [
-              {
-                topicId: "1",
-                name: "Fields/Specializations",
-                minSelections: "2",
-                subTopics: [
-                  { _id: "1-1", name: "Applied Psychology" },
-                  { _id: "1-2", name: "Artificial Intelligence (AI) and application" },
-                  { _id: "1-3", name: "Deep/Machine Learning & Data Science" },
-                  { _id: "1-4", name: "Technology/Computer Science Issue" },
-                  { _id: "1-5", name: "Library / Information Science" },
-                  { _id: "1-6", name: "Art, Design, Architecture, Fine Arts, History" },
-                  { _id: "1-7", name: "Business/Commerce/Organizational Issue" },
-                  { _id: "1-8", name: "Linguistics/Rhetoric/Communications" },
-                  { _id: "1-9", name: "Journalism/Public Relations" },
-                  { _id: "1-10", name: "Expressive Arts (Music, Dance, and so on)" },
-                  { _id: "1-11", name: "Psychology/Sociology / Brain Science/ HCI / Usability Issues" },
-                  { _id: "1-12", name: "Medical / Health / Biological issues" },
-                  { _id: "1-13", name: "Justice/Legal Issue" },
-                  { _id: "1-14", name: "Public/Government/Community Issues/Politics" },
-                  { _id: "1-15", name: "Engineering, Cybernetics, Systemics" },
-                ]
-              },
-              {
-                topicId: "2",
-                name: "Special Sign Up",
-                minSelections: "1",
-                subTopics: []
-              },
-              {
-                topicId: "3",
-                name: "General Lines Of Inquiry",
-                minSelections: "1",
-                subTopics: []
-              },
-              {
-                topicId: "4",
-                name: "Research Topics - Specific",
-                minSelections: "1",
-                subTopics: []
-              },
-              {
-                topicId: "5",
-                name: "Type Of Research Method",
-                minSelections: "1",
-                subTopics: []
-              },
-              {
-                topicId: "6",
-                name: "ISI Member Available For Co-Authorship",
-                minSelections: "1",
-                subTopics: []
-              },
-            ]
-          }
-        }
-      }
-    };
-  },
-  put: async (url: string, data: any) => {
-    console.log("Updating topics:", data);
-    return { success: true };
-  },
-};
+
 
 const TopicsForm: React.FC = () => {
   const [sections, setSections] = useState<TopicSection[]>([]);

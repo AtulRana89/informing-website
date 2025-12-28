@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { apiService } from "../../services";
 
 // Zod Schema
 const academicInfoSchema = z.object({
@@ -27,28 +28,7 @@ const academicInfoSchema = z.object({
 
 type AcademicInfoFormData = z.infer<typeof academicInfoSchema>;
 
-// Mock API service - replace with your actual implementation
-const apiService = {
-  get: async (url: string, config?: any) => {
-    // Mock response
-    return {
-      data: {
-        response: {
-          affiliationUniversity: "Stanford University",
-          department: "Computer Science",
-          positionTitle: "Professor",
-          orcid: "0000-0001-2345-6789",
-          bio: "Researcher specializing in AI and machine learning.",
-          resume: "john_doe_cv.pdf"
-        }
-      }
-    };
-  },
-  put: async (url: string, data: any) => {
-    console.log("Updating academic info:", data);
-    return { success: true };
-  },
-};
+
 
 const AcademicInfoForm: React.FC = () => {
   const [cvFileName, setCvFileName] = useState<string>("");

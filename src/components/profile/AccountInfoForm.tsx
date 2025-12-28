@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { apiService } from "../../services";
 
 // Zod Schema
 const accountInfoSchema = z.object({
@@ -37,26 +38,7 @@ const accountInfoSchema = z.object({
 type AccountInfoFormData = z.infer<typeof accountInfoSchema>;
 
 // Mock API service
-const apiService = {
-  get: async (url: string, config?: any) => {
-    // Mock response
-    return {
-      data: {
-        response: {
-          email: "user@example.com",
-          receivePrimaryEmail: true,
-          receiveReminderEmail: true,
-          receiveSecondaryEmail: "secondary@example.com",
-          memberUntil: "2025-12-31",
-        }
-      }
-    };
-  },
-  put: async (url: string, data: any) => {
-    console.log("Updating account info:", data);
-    return { success: true };
-  },
-};
+
 
 const AccountInfoForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);

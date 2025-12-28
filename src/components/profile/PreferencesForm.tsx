@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { apiService } from "../../services";
 
 // Zod Schema
 const preferencesSchema = z.object({
@@ -17,31 +18,6 @@ const preferencesSchema = z.object({
 
 type PreferencesFormData = z.infer<typeof preferencesSchema>;
 
-// Mock API service
-const apiService = {
-  get: async (url: string, config?: any) => {
-    // Mock response
-    return {
-      data: {
-        response: {
-          unsubscribe: false,
-          allowProfile: true,
-          websiteUrl: "https://example.com",
-          socialMedia: {
-            twitter: "https://twitter.com/username",
-            facebook: "https://facebook.com/username",
-            googlePlus: "",
-            linkedin: "https://linkedin.com/in/username"
-          }
-        }
-      }
-    };
-  },
-  put: async (url: string, data: any) => {
-    console.log("Updating preferences:", data);
-    return { success: true };
-  },
-};
 
 const PreferencesForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);

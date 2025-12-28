@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { apiService } from "../../services";
 
 // Zod Schema
 const personalInfoSchema = z.object({
@@ -23,39 +24,7 @@ const personalInfoSchema = z.object({
 
 type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
 
-// Mock API service - replace with your actual implementation
-const apiService = {
-  get: async (url: string, config?: any) => {
-    // Mock response
-    return {
-      data: {
-        response: {
-          personalTitle: "Dr.",
-          personalName: "John",
-          middleInitial: "A",
-          familyName: "Doe",
-          gender: "Male",
-          address: "123 Main St",
-          city: "New York",
-          stateProvince: "NY",
-          postalCode: "10001",
-          country: "US",
-          primaryTelephone: "+1234567890",
-          secondaryTelephone: "+0987654321",
-          profilePic: ""
-        }
-      }
-    };
-  },
-  put: async (url: string, data: any) => {
-    console.log("Updating profile:", data);
-    return { success: true };
-  },
-  uploadFile: async (url: string, file: File) => {
-    console.log("Uploading file:", file);
-    return { url: URL.createObjectURL(file) };
-  }
-};
+
 
 const PersonalInfoForm: React.FC = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
