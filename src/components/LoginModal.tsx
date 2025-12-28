@@ -1,7 +1,7 @@
+import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService, authService, cookieUtils } from "../services";
-import { jwtDecode } from "jwt-decode";
 
 type Props = {
   open: boolean;
@@ -71,10 +71,10 @@ const LoginModal: React.FC<Props> = ({ open, onClose }) => {
       onClose();
       if (decoded?.role == "admin") {
         navigate("/member/dashboard");
-      }else{
-          navigate("/about");
+      } else {
+        navigate("/about");
       }
-      
+
     } catch (err: any) {
       // Handle different error cases
       if (err.response) {

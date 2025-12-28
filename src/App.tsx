@@ -1,57 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import LoginPage from './components/LoginPage';
-import Dashboard from './components/Dashboard';
+import React, { useEffect, useState } from 'react';
+import { Toaster } from "react-hot-toast";
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import AnalyticsReports from './components/admin/AnalyticsReports';
+import ContentManagement from './components/admin/ContentManagement';
+import DataBackupExport from './components/admin/DataBackupExport';
+import EmailTemplateManagement from './components/admin/EmailTemplateManagement';
+import JournalConferenceManagement from './components/admin/JournalConferenceManagement';
+import SystemConfiguration from './components/admin/SystemConfiguration';
+import UserManagement from './components/admin/UserManagement';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLayout from './components/AdminLayout';
-import UserManagement from './components/admin/UserManagement';
-import JournalConferenceManagement from './components/admin/JournalConferenceManagement';
-import ContentManagement from './components/admin/ContentManagement';
-import EmailTemplateManagement from './components/admin/EmailTemplateManagement';
-import SystemConfiguration from './components/admin/SystemConfiguration';
-import AnalyticsReports from './components/admin/AnalyticsReports';
-import DataBackupExport from './components/admin/DataBackupExport';
-import Profile from './components/Profile';
-import Publications from './components/Publications';
 import Community from './components/Community';
+import Dashboard from './components/Dashboard';
+import Layout from './components/Layout';
+import LoginPage from './components/LoginPage';
+import Profile from './components/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
+import Publications from './components/Publications';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Login from './components/Login';
-import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
-import CallForPapersPage from './pages/CallForPapersPage';
-import PublicationsPage from './pages/PublicationsPage';
-import JournalsPage from './pages/JournalsPage';
-import ConferencesPage from './pages/ConferencesPage';
-import CommunityPage from './pages/CommunityPage';
-import ContactPage from './pages/ContactPage';
-import FAQPage from './pages/FAQPage';
-import ISIVideosPage from './pages/ISIVideosPage';
-import MentorshipPage from './pages/MentorshipPage';
-import SecondActPage from './pages/SecondActPage';
-import SponsorUsPage from './pages/SponsorUsPage';
 import AdvertisePage from './pages/AdvertisePage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import CallForPapersPage from './pages/CallForPapersPage';
+import CommunityPage from './pages/CommunityPage';
+import ConferencesPage from './pages/ConferencesPage';
+import ContactPage from './pages/ContactPage';
 import EthicsPolicyPage from './pages/EthicsPolicyPage';
-import LegalDisclaimerPage from './pages/LegalDisclaimerPage';
-import SiteMapPage from './pages/SiteMapPage';
+import FAQPage from './pages/FAQPage';
+import HomePage from './pages/HomePage';
+import ISIVideosPage from './pages/ISIVideosPage';
 import JoinISIPage from './pages/JoinISIPage';
-import ProfileEditPage from './pages/ProfileEditPage';
+import JournalsPage from './pages/JournalsPage';
+import LegalDisclaimerPage from './pages/LegalDisclaimerPage';
+import MemberConferencesPage from './pages/MemberConferencesPage';
 import MemberDashboardPage from './pages/MemberDashboardPage';
-import YourArticlesPage from './pages/YourArticlesPage';
-import YourReviewsPage from './pages/YourReviewsPage';
+import MembershipOptionsPage from './pages/MembershipOptionsPage';
+import MentorshipPage from './pages/MentorshipPage';
 import NotificationsPage from './pages/NotificationsPage';
 import PeerDirectoryPage from './pages/PeerDirectoryPage';
-import MemberConferencesPage from './pages/MemberConferencesPage';
-import MembershipOptionsPage from './pages/MembershipOptionsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import ProfileEditPage from './pages/ProfileEditPage';
+import PublicationsPage from './pages/PublicationsPage';
+import SecondActPage from './pages/SecondActPage';
+import SiteMapPage from './pages/SiteMapPage';
+import SponsorUsPage from './pages/SponsorUsPage';
+import YourArticlesPage from './pages/YourArticlesPage';
+import YourReviewsPage from './pages/YourReviewsPage';
 
 
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <AuthProvider>
         <Routes>
           {/* Public routes */}
@@ -75,10 +77,10 @@ function App() {
           <Route path="/legal-disclaimer" element={<LegalDisclaimerPage />} />
           <Route path="/site-map" element={<SiteMapPage />} />
           <Route path="/join-isi" element={<JoinISIPage />} />
-          
+
           {/* Admin routes */}
           <Route path="/admin" element={<AdminDashboard />} />
-          
+
           {/* Member routes */}
           <Route path="/profile-edit" element={<ProfileEditPage />} />
           <Route path="/member/dashboard" element={<MemberDashboardPage />} />
@@ -88,7 +90,7 @@ function App() {
           <Route path="/member/peer-directory" element={<PeerDirectoryPage />} />
           <Route path="/member/conferences" element={<MemberConferencesPage />} />
           <Route path="/member/membership-options" element={<MembershipOptionsPage />} />
-          
+
           {/* Admin dashboard routes */}
           <Route path="/admin-dashboard" element={
             <ProtectedRoute requiredRoles={['admin', 'super-admin']}>
@@ -104,7 +106,7 @@ function App() {
             <Route path="analytics" element={<AnalyticsReports />} />
             <Route path="backup" element={<DataBackupExport />} />
           </Route>
-          
+
           {/* Protected routes with main layout */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
