@@ -1,51 +1,217 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "react-toastify";
 
-const AccountInfoForm = () => {
-  const [formData, setFormData] = useState({
-    primaryEmail: "",
-    receivePrimaryEmails: false,
-    secondaryEmail: "",
-    receiveSecondaryEmails: false,
-    currentPassword: "",
-    newPassword: "",
-    memberUntil: ""
+// Zod Schema
+const accountInfoSchema = z.object({
+  primaryEmail: z.string().email("Please enter a valid email address"),
+  receivePrimaryEmails: z.boolean(),
+  secondaryEmail: z.string().email("Please enter a valid email address").or(z.literal("")),
+  receiveSecondaryEmails: z.boolean(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().optional(),
+  confirmPassword: z.string().optional(),
+  memberUntil: z.string().optional(),
+}).refine((data) => {
+  // If current password is provided, new password must also be provided
+  if (data.currentPassword && !data.newPassword) {
+    return false;
+  }
+  return true;
+}, {
+  message: "New password is required when changing password",
+  path: ["newPassword"],
+}).refine((data) => {
+  // If new password is provided, it must match confirm password
+  if (data.newPassword && data.newPassword !== data.confirmPassword) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type AccountInfoFormData = z.infer<typeof accountInfoSchema>;
+
+// Mock API service
+const apiService = {
+  get: async (url: string, config?: any) => {
+    // Mock response
+    return {
+      data: {
+        response: {
+          email: "user@example.com",
+          receivePrimaryEmail: true,
+          receiveReminderEmail: true,
+          receiveSecondaryEmail: "secondary@example.com",
+          memberUntil: "2025-12-31",
+        }
+      }
+    };
+  },
+  put: async (url: string, data: any) => {
+    console.log("Updating account info:", data);
+    return { success: true };
+  },
+};
+
+const AccountInfoForm: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const userId = "user123"; // Replace with actual userId
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors, touchedFields }
+  } = useForm<AccountInfoFormData>({
+    resolver: zodResolver(accountInfoSchema),
+    mode: "onTouched",
+    defaultValues: {
+      primaryEmail: "",
+      receivePrimaryEmails: false,
+      secondaryEmail: "",
+      receiveSecondaryEmails: false,
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+      memberUntil: ""
+    }
   });
 
-  const handleInputChange = (e:any) => {
-    const { name, value, type, checked } = e.target;
+  const currentPassword = watch("currentPassword");
+  const newPassword = watch("newPassword");
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value
-    }));
+  useEffect(() => {
+    if (userId) {
+      fetchUserProfile();
+    }
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsFetching(true);
+      setApiError("");
+
+      const responseobject = await apiService.get("/user/profile", {
+        params: { userId },
+      });
+      const response = responseobject.data.response;
+
+      if (response) {
+        setValue("primaryEmail", response.email || "");
+        setValue("receivePrimaryEmails", response.receivePrimaryEmail ?? true);
+        setValue("secondaryEmail", response.receiveSecondaryEmail || "");
+        setValue("receiveSecondaryEmails", response.receiveReminderEmail ?? true);
+        setValue("memberUntil", response.memberUntil || "");
+      }
+    } catch (err: any) {
+      console.error("Error fetching user profile:", err);
+      setApiError(err.response?.data?.message || "Failed to load user profile");
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleCancel = () => {
+    reset();
+    if (userId) {
+      fetchUserProfile();
+    }
+  };
+
+  const onSubmit = async (data: AccountInfoFormData) => {
+    console.log("Form submitted with data:", data);
+
+    if (!userId) {
+      setApiError("User ID is required");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setApiError("");
+
+      // Prepare update payload
+      const updatePayload: any = {
+        userId: userId,
+        email: data.primaryEmail,
+        receivePrimaryEmail: data.receivePrimaryEmails,
+        receiveReminderEmail: data.receiveSecondaryEmails,
+        receiveSecondaryEmail: data.secondaryEmail || "",
+        memberUntil: data.memberUntil || "",
+      };
+
+      // Only include password fields if changing password
+      if (data.currentPassword && data.newPassword) {
+        updatePayload.currentPassword = data.currentPassword;
+        updatePayload.newPassword = data.newPassword;
+      }
+
+      console.log("Updating account with payload:", updatePayload);
+      await apiService.put("/user/update", updatePayload);
+
+      toast.success("Account information updated successfully!");
+      
+      // Clear password fields after successful update
+      if (data.currentPassword) {
+        setValue("currentPassword", "");
+        setValue("newPassword", "");
+        setValue("confirmPassword", "");
+      }
+    } catch (err: any) {
+      console.error("Error updating account info:", err);
+      setApiError(err.response?.data?.message || "Failed to update account information");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit(onSubmit)(e);
   };
 
   return (
     <div className="bg-white">
-      <form className="space-y-6">
+      {isFetching && (
+        <div className="text-center text-[#FF4C7D] mb-4">Loading account info...</div>
+      )}
 
+      {apiError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          {apiError}
+        </div>
+      )}
+
+      <div className="space-y-6">
         {/* Top Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
           {/* Primary Email */}
           <div>
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
-              Primary Email
+              Primary Email *
             </label>
             <input
               type="email"
-              name="primaryEmail"
-              value={formData.primaryEmail}
-              onChange={handleInputChange}
+              {...register("primaryEmail")}
               className="w-full h-10 rounded-md border-0 px-3"
               style={{ backgroundColor: "#F5F5F5" }}
             />
+            {errors.primaryEmail && touchedFields.primaryEmail && (
+              <p className="text-red-500 text-xs mt-1">{errors.primaryEmail.message}</p>
+            )}
             <label className="flex items-center gap-2 text-sm mt-2">
               <input
                 type="checkbox"
-                name="receivePrimaryEmails"
-                checked={formData.receivePrimaryEmails}
-                onChange={handleInputChange}
+                {...register("receivePrimaryEmails")}
                 className="accent-[#295F9A]"
               />
               Receive emails at this address
@@ -59,18 +225,17 @@ const AccountInfoForm = () => {
             </label>
             <input
               type="email"
-              name="secondaryEmail"
-              value={formData.secondaryEmail}
-              onChange={handleInputChange}
+              {...register("secondaryEmail")}
               className="w-full h-10 rounded-md border-0 px-3"
               style={{ backgroundColor: "#F5F5F5" }}
             />
+            {errors.secondaryEmail && touchedFields.secondaryEmail && (
+              <p className="text-red-500 text-xs mt-1">{errors.secondaryEmail.message}</p>
+            )}
             <label className="flex items-center gap-2 text-sm mt-2">
               <input
                 type="checkbox"
-                name="receiveSecondaryEmails"
-                checked={formData.receiveSecondaryEmails}
-                onChange={handleInputChange}
+                {...register("receiveSecondaryEmails")}
                 className="accent-[#295F9A]"
               />
               Receive emails at this address
@@ -84,31 +249,53 @@ const AccountInfoForm = () => {
             </label>
             <input
               type="password"
-              name="currentPassword"
-              value={formData.currentPassword}
-              onChange={handleInputChange}
+              {...register("currentPassword")}
+              placeholder="Current password"
               className="w-full h-10 rounded-md border-0 px-3"
               style={{ backgroundColor: "#F5F5F5" }}
             />
+            {errors.currentPassword && touchedFields.currentPassword && (
+              <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>
+            )}
           </div>
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* New Password */}
+          <div>
+            <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
+              New Password
+            </label>
+            <input
+              type="password"
+              {...register("newPassword")}
+              placeholder="New password"
+              className="w-full h-10 rounded-md border-0 px-3"
+              style={{ backgroundColor: "#F5F5F5" }}
+              disabled={!currentPassword}
+            />
+            {errors.newPassword && touchedFields.newPassword && (
+              <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
           <div>
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
               Type Your New Password Again
             </label>
             <input
               type="password"
-              name="newPassword"
-              value={formData.newPassword}
-              onChange={handleInputChange}
+              {...register("confirmPassword")}
+              placeholder="Confirm password"
               className="w-full h-10 rounded-md border-0 px-3"
               style={{ backgroundColor: "#F5F5F5" }}
+              disabled={!newPassword}
             />
+            {errors.confirmPassword && touchedFields.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
+            )}
           </div>
 
           {/* Member Until */}
@@ -125,33 +312,40 @@ const AccountInfoForm = () => {
             </label>
             <input
               type="text"
-              name="memberUntil"
-              value={formData.memberUntil}
-              onChange={handleInputChange}
+              {...register("memberUntil")}
               className="w-full h-10 rounded-md border-0 px-3"
               style={{ backgroundColor: "#F5F5F5" }}
+              readOnly
             />
           </div>
         </div>
 
+        {/* Password Change Info */}
+        {currentPassword && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-sm">
+            <strong>Note:</strong> To change your password, please enter your current password, new password, and confirm the new password.
+          </div>
+        )}
+
         {/* Buttons */}
         <div className="flex justify-center gap-4 pt-8">
           <button
-            type="button"
-            className="px-16 py-3 rounded-[14px] text-white text-[16px] font-medium"
+            onClick={handleFormSubmit}
+            disabled={isLoading}
+            className="px-16 py-3 rounded-[14px] text-white text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "#FF4C7D" }}
           >
-            Save
+            {isLoading ? "Saving..." : "Save"}
           </button>
           <button
-            type="button"
-            className="px-16 py-3 rounded-[14px] text-[#3E3232] text-[16px] font-medium bg-[#F5F5F5] hover:bg-gray-50"
+            onClick={handleCancel}
+            disabled={isLoading}
+            className="px-16 py-3 rounded-[14px] text-[#3E3232] text-[16px] font-medium bg-[#F5F5F5] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
         </div>
-
-      </form>
+      </div>
     </div>
   );
 };

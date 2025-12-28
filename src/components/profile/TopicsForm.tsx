@@ -1,147 +1,321 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "react-toastify";
 
-const TopicsForm = () => {
-  const [expandedSections, setExpandedSections] = useState({
-    "fields-specializations": false,
-    "special-signup": false,
-    "general-inquiry": false,
-    "research-topics": false,
-    "research-method": false,
-    "co-authorship": false,
+// Types
+interface SubTopic {
+  _id: string;
+  name: string;
+  checked: boolean;
+}
+
+interface TopicOption {
+  topicId: string;
+  name: string;
+  checked: boolean;
+  hasSubOptions: boolean;
+  expanded: boolean;
+  subOptions?: SubTopic[];
+}
+
+interface TopicSection {
+  topicId: string;
+  name: string;
+  minSelections: string;
+  expanded: boolean;
+  options?: TopicOption[];
+}
+
+// Zod Schema
+const topicsSchema = z.object({
+  selectedTopics: z.array(z.string()).min(2, "Please select at least 2 topics"),
+});
+
+type TopicsFormData = z.infer<typeof topicsSchema>;
+
+// Mock API service
+const apiService = {
+  get: async (url: string) => {
+    // Mock response
+    return {
+      data: {
+        response: {
+          data: {
+            list: [
+              {
+                topicId: "1",
+                name: "Fields/Specializations",
+                minSelections: "2",
+                subTopics: [
+                  { _id: "1-1", name: "Applied Psychology" },
+                  { _id: "1-2", name: "Artificial Intelligence (AI) and application" },
+                  { _id: "1-3", name: "Deep/Machine Learning & Data Science" },
+                  { _id: "1-4", name: "Technology/Computer Science Issue" },
+                  { _id: "1-5", name: "Library / Information Science" },
+                  { _id: "1-6", name: "Art, Design, Architecture, Fine Arts, History" },
+                  { _id: "1-7", name: "Business/Commerce/Organizational Issue" },
+                  { _id: "1-8", name: "Linguistics/Rhetoric/Communications" },
+                  { _id: "1-9", name: "Journalism/Public Relations" },
+                  { _id: "1-10", name: "Expressive Arts (Music, Dance, and so on)" },
+                  { _id: "1-11", name: "Psychology/Sociology / Brain Science/ HCI / Usability Issues" },
+                  { _id: "1-12", name: "Medical / Health / Biological issues" },
+                  { _id: "1-13", name: "Justice/Legal Issue" },
+                  { _id: "1-14", name: "Public/Government/Community Issues/Politics" },
+                  { _id: "1-15", name: "Engineering, Cybernetics, Systemics" },
+                ]
+              },
+              {
+                topicId: "2",
+                name: "Special Sign Up",
+                minSelections: "1",
+                subTopics: []
+              },
+              {
+                topicId: "3",
+                name: "General Lines Of Inquiry",
+                minSelections: "1",
+                subTopics: []
+              },
+              {
+                topicId: "4",
+                name: "Research Topics - Specific",
+                minSelections: "1",
+                subTopics: []
+              },
+              {
+                topicId: "5",
+                name: "Type Of Research Method",
+                minSelections: "1",
+                subTopics: []
+              },
+              {
+                topicId: "6",
+                name: "ISI Member Available For Co-Authorship",
+                minSelections: "1",
+                subTopics: []
+              },
+            ]
+          }
+        }
+      }
+    };
+  },
+  put: async (url: string, data: any) => {
+    console.log("Updating topics:", data);
+    return { success: true };
+  },
+};
+
+const TopicsForm: React.FC = () => {
+  const [sections, setSections] = useState<TopicSection[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const userId = "user123"; // Replace with actual userId
+
+  const {
+    handleSubmit,
+    setValue,
+    formState: { errors }
+  } = useForm<TopicsFormData>({
+    resolver: zodResolver(topicsSchema),
+    mode: "onSubmit",
+    defaultValues: {
+      selectedTopics: [],
+    }
   });
 
-  const [selectedTopics, setSelectedTopics] = useState([]);
+  useEffect(() => {
+    fetchTopics();
+  }, []);
 
-  const toggleSection = (section: any) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  useEffect(() => {
+    setValue("selectedTopics", selectedTopics);
+  }, [selectedTopics, setValue]);
+
+  const fetchTopics = async () => {
+    setIsFetching(true);
+    try {
+      const response = await apiService.get("/topic/topic-with-subtopics");
+      const data = response.data?.response || response;
+
+      const transformedSections: TopicSection[] =
+        data.data?.list.map((topic: any) => ({
+          topicId: topic.topicId,
+          name: topic.name,
+          minSelections: topic.minSelections || "1",
+          expanded: false,
+          options: topic.subTopics?.map((sub: any) => ({
+            topicId: sub._id,
+            name: sub.name,
+            checked: false,
+            hasSubOptions: false,
+            expanded: false,
+          })),
+        })) || [];
+
+      setSections(transformedSections);
+    } catch (err) {
+      console.error("Error fetching topics:", err);
+    } finally {
+      setIsFetching(false);
+    }
   };
 
-  const handleTopicChange = (topic: any, checked: any) => {
-    setSelectedTopics((prev) =>
-      checked ? [...prev, topic] : prev.filter((t) => t !== topic)
+  const toggleSection = (sectionId: string) => {
+    setSections(
+      sections.map((section) =>
+        section.topicId === sectionId
+          ? { ...section, expanded: !section.expanded }
+          : section
+      )
     );
   };
 
-  const topicsList = [
-    "Applied Psychology",
-    "Artificial Intelligence (AI) and application",
-    "Deep/Machine Learning & Data Science",
-    "Technology/Computer Science Issue",
-    "Library / Information Science",
-    "Art, Design, Architecture, Fine Arts, History",
-    "Business/Commerce/Organizational Issue",
-    "Linguistics/Rhetoric/Communications",
-    "Journalism/Public Relations",
-    "Expressive Arts (Music, Dance, and so on)",
-    "Psychology/Sociology / Brain Science/ HCI / Usability Issues",
-    "Medical / Health / Biological issues",
-    "Justice/Legal Issue",
-    "Public/Government/Community Issues/Politics",
-    "Engineering, Cybernetics, Systemics",
-  ];
+  const toggleOption = (sectionId: string, optionId: string, name?: string) => {
+    setSections(
+      sections.map((section) => {
+        if (section.topicId === sectionId && section.options) {
+          return {
+            ...section,
+            options: section.options.map((option) => {
+              if (option.topicId === optionId) {
+                const newChecked = !option.checked;
+
+                if (name) {
+                  setSelectedTopics(
+                    (prev) =>
+                      newChecked
+                        ? [...prev, name]
+                        : prev.filter((t) => t !== name)
+                  );
+                }
+
+                return {
+                  ...option,
+                  checked: newChecked,
+                };
+              }
+              return option;
+            }),
+          };
+        }
+        return section;
+      })
+    );
+  };
+
+  const handleCancel = () => {
+    setSelectedTopics([]);
+    fetchTopics();
+  };
+
+  const onSubmit = async (data: TopicsFormData) => {
+    if (!userId) {
+      toast.error("User ID is required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        userId: userId,
+        selectedTopics: data.selectedTopics,
+      };
+
+      console.log("Updating topics with payload:", payload);
+      await apiService.put("/user/update-topics", payload);
+
+      toast.success("Topics updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating topics:", error);
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to update topics. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit(onSubmit)(e);
+  };
 
   return (
     <div className="bg-white">
+      {isFetching && (
+        <div className="text-center text-[#FF4C7D] mb-4">Loading topics...</div>
+      )}
+
+      {errors.selectedTopics && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          {errors.selectedTopics.message}
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Left Column */}
         <div className="flex-1">
-          {/* Fields / Specializations */}
-          <div className="mb-6">
-            <div
-              className="flex items-center justify-between p-4 cursor-pointer rounded-[12px]"
-              onClick={() => toggleSection("fields-specializations")}
-              style={{ backgroundColor: "#F5F5F5" }}
-            >
-              <h3 className="text-sm font-semibold text-[#3E3232]">
-                Fields/Specializations{" "}
-                <span className="text-xs font-normal">(At Least 2)</span>
-              </h3>
-              <span className="text-lg">
-                {expandedSections["fields-specializations"] ? "−" : "+"}
-              </span>
-            </div>
-
-            {expandedSections["fields-specializations"] && (
-              <div
-                className="p-4 rounded-b-[12px]"
-                style={{ backgroundColor: "#F5F5F5" }}
-              >
-                <div className="space-y-3">
-                  {topicsList.map((topic) => (
-                    <label
-                      key={topic}
-                      className="flex items-start sm:items-center space-x-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedTopics.includes(topic)}
-                        onChange={(e) =>
-                          handleTopicChange(topic, e.target.checked)
-                        }
-                        className="w-4 h-4 mt-1 sm:mt-0"
-                        style={{ accentColor: "#3E3232" }}
-                      />
-                      <span className="text-sm text-[#3E3232] leading-relaxed">
-                        {topic}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Reusable collapsed sections */}
-          {[
-            [
-              "special-signup",
-              "Special Sign Up",
-              "Special sign up options will appear here.",
-            ],
-            [
-              "general-inquiry",
-              "General Lines Of Inquiry",
-              "General inquiry options will appear here.",
-            ],
-            [
-              "research-topics",
-              "Research Topics - Specific",
-              "Research topic options will appear here.",
-            ],
-            [
-              "research-method",
-              "Type Of Research Method",
-              "Research method options will appear here.",
-            ],
-            [
-              "co-authorship",
-              "ISI Member Available For Co-Authorship",
-              "Co-authorship options will appear here.",
-            ],
-          ].map(([key, title, text]) => (
-            <div className="mb-6" key={key}>
+          {sections.map((section) => (
+            <div className="mb-6" key={section.topicId}>
               <div
                 className="flex items-center justify-between p-4 cursor-pointer rounded-[12px]"
-                onClick={() => toggleSection(key)}
+                onClick={() => toggleSection(section.topicId)}
                 style={{ backgroundColor: "#F5F5F5" }}
               >
                 <h3 className="text-sm font-semibold text-[#3E3232]">
-                  {title}
+                  {section.name}{" "}
+                  {section.minSelections && parseInt(section.minSelections) > 1 && (
+                    <span className="text-xs font-normal">
+                      (At Least {section.minSelections})
+                    </span>
+                  )}
                 </h3>
                 <span className="text-lg">
-                  {expandedSections[key] ? "−" : "+"}
+                  {section.expanded ? "−" : "+"}
                 </span>
               </div>
 
-              {expandedSections[key] && (
+              {section.expanded && (
                 <div
                   className="p-4 rounded-b-[12px]"
                   style={{ backgroundColor: "#F5F5F5" }}
                 >
-                  <p className="text-sm text-[#3E3232]">{text}</p>
+                  {section.options && section.options.length > 0 ? (
+                    <div className="space-y-3">
+                      {section.options.map((option) => (
+                        <label
+                          key={option.topicId}
+                          className="flex items-start sm:items-center space-x-3 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={option.checked}
+                            onChange={() =>
+                              toggleOption(section.topicId, option.topicId, option.name)
+                            }
+                            className="w-4 h-4 mt-1 sm:mt-0"
+                            style={{ accentColor: "#3E3232" }}
+                          />
+                          <span className="text-sm text-[#3E3232] leading-relaxed">
+                            {option.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#3E3232]">
+                      {section.name === "Special Sign Up" && "Special sign up options will appear here."}
+                      {section.name === "General Lines Of Inquiry" && "General inquiry options will appear here."}
+                      {section.name === "Research Topics - Specific" && "Research topic options will appear here."}
+                      {section.name === "Type Of Research Method" && "Research method options will appear here."}
+                      {section.name === "ISI Member Available For Co-Authorship" && "Co-authorship options will appear here."}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -162,17 +336,32 @@ const TopicsForm = () => {
               Selected Topics
             </h3>
 
-            <div className="space-y-2">
-              {selectedTopics.map((topic) => (
-                <div
-                  key={topic}
-                  className="text-sm font-medium text-[#3E3232] p-3 rounded-[8px]"
-                  style={{ backgroundColor: "#F5F5F5" }}
-                >
-                  {topic}
-                </div>
-              ))}
-            </div>
+            {selectedTopics.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No topics selected yet
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {selectedTopics.map((topic) => (
+                  <div
+                    key={topic}
+                    className="text-sm font-medium text-[#3E3232] p-3 rounded-[8px] bg-white"
+                  >
+                    {topic}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Selection Count */}
+          <div className="mt-4 text-sm text-center text-gray-600">
+            {selectedTopics.length} topic{selectedTopics.length !== 1 ? "s" : ""} selected
+            {selectedTopics.length < 2 && (
+              <span className="text-red-500 block mt-1">
+                (Minimum 2 required)
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -180,15 +369,17 @@ const TopicsForm = () => {
       {/* Buttons */}
       <div className="flex justify-center gap-4 pt-8">
         <button
-          type="button"
-          className="px-16 py-3 rounded-[14px] text-white text-[16px] font-medium"
+          onClick={handleFormSubmit}
+          disabled={isLoading}
+          className="px-16 py-3 rounded-[14px] text-white text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: "#FF4C7D" }}
         >
-          Save
+          {isLoading ? "Saving..." : "Save"}
         </button>
         <button
-          type="button"
-          className="px-16 py-3 rounded-[14px] text-[#3E3232] text-[16px] font-medium bg-[#F5F5F5] hover:bg-gray-50"
+          onClick={handleCancel}
+          disabled={isLoading}
+          className="px-16 py-3 rounded-[14px] text-[#3E3232] text-[16px] font-medium bg-[#F5F5F5] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>
