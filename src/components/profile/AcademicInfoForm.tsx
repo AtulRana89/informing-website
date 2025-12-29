@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { toast } from "react-toastify";
 import { apiService } from "../../services";
 
 // Zod Schema
 const academicInfoSchema = z.object({
-  affiliation: z.string().min(1, "Affiliation/University is required"),
-  department: z.string().min(1, "Department is required"),
+  affiliation: z.string().optional(),
+  department: z.string().optional(),
   positionTitle: z.string().optional(),
   orcid: z.string().optional(),
   academicAddress: z.string().optional(),
@@ -25,6 +25,58 @@ const academicInfoSchema = z.object({
     return true;
   }, "File size must be less than 2MB"),
 });
+
+
+
+
+// // Define the validation schema
+// const academicInfoSchema = z
+//   .object({
+//     affiliation: z.string().optional(),
+//     department: z.string().optional(),
+//     positionTitle: z.string().optional(),
+//     orcid: z.string().optional(),
+//     academicAddress: z.string().optional(),
+//     academicCity: z.string().optional(),
+//     academicStateProvince: z.string().optional(),
+//     academicCountry: z.string().optional(),
+//     academicPostalCode: z.string().optional(),
+//     shortBio: z.string().optional(),
+//     resume: z.any().refine((file) => {
+//       if (!file) return true; // Optional field
+//       if (file instanceof File) {
+//         return file.size <= 2 * 1024 * 1024; // 2MB max
+//       }
+//       return true;
+//     }, "File size must be less than 2MB"),
+//     // middleInitial: z.string().optional(),
+//     // positionTitle: z
+//     //   .string()
+//     //   .min(1, "Family name is required")
+//     //   .min(2, "Family name must be at least 2 characters"),
+//     // city: z.string().min(1, "City is required"),
+//     // country: z.string().min(1, "Country is required"),
+//     // affiliationUniversity: z
+//     //   .string()
+//     //   .min(1, "Affiliation/University is required"),
+//     // email: z
+//     //   .string()
+//     //   .min(1, "Email is required")
+//     //   .email("Invalid email address"),
+//     // password: z
+//     //   .string()
+//     //   .min(1, "Password is required")
+//     //   .min(8, "Password must be at least 8 characters")
+//     //   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+//     //   .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+//     //   .regex(/[0-9]/, "Password must contain at least one number"),
+//     // repeatPassword: z.string().min(1, "Please repeat your password"),
+//     // isSubscribe: z.boolean().optional(),
+//     // // ✅ Add role field here
+//     // captchaCode: z.string().min(1, "Captcha code is required"),
+//     // paymentType: z.string().optional(),
+//     // role: z.string().optional(),
+//   })
 
 type AcademicInfoFormData = z.infer<typeof academicInfoSchema>;
 

@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { toast } from "react-toastify";
 import { apiService } from "../../services";
 
 // Zod Schema
 const accountInfoSchema = z.object({
   primaryEmail: z.string().email("Please enter a valid email address"),
   receivePrimaryEmails: z.boolean(),
-  secondaryEmail: z.string().email("Please enter a valid email address").or(z.literal("")),
+  secondaryEmail: z.string().email("Please enter a valid email address").optional(),
   receiveSecondaryEmails: z.boolean(),
   currentPassword: z.string().optional(),
   newPassword: z.string().optional(),
@@ -141,7 +141,7 @@ const AccountInfoForm: React.FC = () => {
       await apiService.put("/user/update", updatePayload);
 
       toast.success("Account information updated successfully!");
-      
+
       // Clear password fields after successful update
       if (data.currentPassword) {
         setValue("currentPassword", "");

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { toast } from "react-toastify";
 import { apiService } from "../../services";
 
 // Zod Schema
@@ -164,8 +164,8 @@ const PersonalInfoForm: React.FC = () => {
         country: data.country,
       };
 
-      const res=await apiService.put("/user/update", updatePayload);
-      console.log(res,"nnn")
+      const res = await apiService.put("/user/update", updatePayload);
+      console.log(res, "nnn")
       toast.success("Profile updated successfully!");
     } catch (err: any) {
       console.error("Error updating profile:", err);
@@ -185,7 +185,7 @@ const PersonalInfoForm: React.FC = () => {
       {isFetching && (
         <div className="text-center text-[#295F9A] mb-4">Loading profile...</div>
       )}
-      
+
       {apiError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
           {apiError}

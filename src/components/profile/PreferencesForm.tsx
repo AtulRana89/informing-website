@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { toast } from "react-toastify";
 import { apiService } from "../../services";
 
 // Zod Schema
 const preferencesSchema = z.object({
   unsubscribeNewsletters: z.boolean(),
   allowBasicProfile: z.boolean(),
-  websiteURL: z.string().url("Please enter a valid URL").or(z.literal("")),
-  twitterURL: z.string().url("Please enter a valid URL").or(z.literal("")),
-  facebookURL: z.string().url("Please enter a valid URL").or(z.literal("")),
-  googlePlusURL: z.string().url("Please enter a valid URL").or(z.literal("")),
-  linkedinURL: z.string().url("Please enter a valid URL").or(z.literal("")),
+  websiteURL: z.string().url("Please enter a valid URL").optional(),
+  twitterURL: z.string().url("Please enter a valid URL").optional(),
+  facebookURL: z.string().url("Please enter a valid URL").optional(),
+  googlePlusURL: z.string().url("Please enter a valid URL").optional(),
+  linkedinURL: z.string().url("Please enter a valid URL").optional(),
 });
 
 type PreferencesFormData = z.infer<typeof preferencesSchema>;
