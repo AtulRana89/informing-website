@@ -53,8 +53,29 @@ const createUserSchema = z
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
 
+type PlanType =
+  | '1y-basic'
+  | '1y-sponsor'
+  | '5y-basic'
+  | '5y-sponsor'
+  | 'life-basic'
+  | 'life-sponsor';
+
+interface PayPalPlan {
+  id: string;
+  planType: PlanType;
+  product_id: string;
+  name: string;
+  status: string;
+  description: string;
+  version: number;
+  billing_cycles: any[];
+}
+
 const JoinISIPage: React.FC = () => {
-  const [plan, setPlan] = React.useState<'1y-basic' | '1y-sponsor' | '5y-basic' | '5y-sponsor' | 'life-basic' | 'life-sponsor'>('1y-basic');
+  const [plans, setPlans] = useState<PayPalPlan[]>([]);
+  const [plan, setPlan] = useState<PlanType | null>(null);
+  // const [plan, setPlan] = React.useState<'1y-basic' | '1y-sponsor' | '5y-basic' | '5y-sponsor' | 'life-basic' | 'life-sponsor'>('1y-basic');
   const [captchaCode, setCaptchaCode] = useState("7VJ7R1EE");
 
   const paypalOptions = {
@@ -63,6 +84,180 @@ const JoinISIPage: React.FC = () => {
     intent: 'subscription',
     vault: true,
     components: 'buttons',
+  };
+
+  useEffect(() => {
+    const data: PayPalPlan[] = [
+      {
+        "id": "P-98P507856D497622UNFETDNA",
+        "planType": "1y-basic",
+        "version": 1,
+        "product_id": "PROD-4KP56367VU896645C",
+        "name": "Basic - 1 Year",
+        "status": "ACTIVE",
+        "description": "Basic membership for 1 year",
+        "billing_cycles": [
+          {
+            "pricing_scheme": {
+              "version": 1,
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "75.0"
+              },
+              "create_time": "2025-12-22T11:55:32.000Z",
+              "update_time": "2025-12-22T11:55:32.000Z"
+            },
+            "frequency": {
+              "interval_unit": "YEAR",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 1
+          }
+        ]
+      },
+      {
+        "id": "P-60U54129JF267354NNFETFXY",
+        "planType": "1y-sponsor",
+        "version": 1,
+        "product_id": "PROD-2J870760NC067493P",
+        "name": "Sponsoring - 1 Year",
+        "status": "ACTIVE",
+        "description": "Sponsoring membership for 1 year",
+        "billing_cycles": [
+          {
+            "pricing_scheme": {
+              "version": 1,
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "125.0"
+              },
+              "create_time": "2025-12-22T12:00:31.000Z",
+              "update_time": "2025-12-22T12:00:31.000Z"
+            },
+            "frequency": {
+              "interval_unit": "YEAR",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 1
+          }
+        ],
+      },
+      {
+        "id": "P-7GB94956Y9580284ANFETJOY",
+        "planType": "5y-sponsor",
+        "version": 1,
+        "product_id": "PROD-2J870760NC067493P",
+        "name": "Sponsoring - 5 Year",
+        "status": "ACTIVE",
+        "description": "Sponsoring membership for 5 year",
+        "billing_cycles": [
+          {
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "500.0"
+              }
+            },
+            "frequency": {
+              "interval_unit": "YEAR",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 5
+          }
+        ],
+
+      },
+      {
+        "id": "P-5VR93344AX120281NNFETKWY",
+        "planType": "life-sponsor",
+        "version": 1,
+        "product_id": "PROD-2J870760NC067493P",
+        "name": "Sponsoring - Life",
+        "status": "ACTIVE",
+        "description": "Lifetime sponsoring membership",
+        "billing_cycles": [
+          {
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "5000.0"
+              }
+            },
+            "frequency": {
+              "interval_unit": "YEAR",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 99
+          }
+        ],
+      },
+      {
+        "id": "P-3C184425140228839NFETLEY",
+        "planType": "life-basic",
+        "version": 1,
+        "product_id": "PROD-4KP56367VU896645C",
+        "name": "Basic - Life",
+        "status": "ACTIVE",
+        "description": "Basic sponsoring membership",
+        "billing_cycles": [
+          {
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "1000.0"
+              }
+            },
+            "frequency": {
+              "interval_unit": "YEAR",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 99
+          }
+        ],
+      },
+      {
+        "id": "P-4G4391977B902291XNFETLNI",
+        "planType": "5y-basic",
+        "version": 1,
+        "product_id": "PROD-4KP56367VU896645C",
+        "name": "Basic - 5 Year",
+        "status": "ACTIVE",
+        "description": "Basic membership for 5 years",
+        "billing_cycles": [
+          {
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "300.0"
+              }
+            },
+            "frequency": {
+              "interval_unit": "YEAR",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 5
+          }
+        ]
+      }
+    ]
+    setPlans(data);
+  }, []);
+
+  const getPrice = (type: PlanType) => {
+    const p = plans.find(p => p.planType === type);
+    return p?.billing_cycles?.[0]?.pricing_scheme?.fixed_price?.value ?? '--';
   };
 
   const {
@@ -333,7 +528,16 @@ const JoinISIPage: React.FC = () => {
     'life-sponsor': 'P-5VR93344AX120281NNFETKWY',
   };
 
+  const getPlanId = (type: PlanType | null): string | undefined => {
+    if (!type) return undefined;
+    return plans.find(p => p.planType === type)?.id;
+  };
+
   const onSubmit = async (data: CreateUserFormData) => {
+    if ((data.paymentType !== "FREE" && !plan)) {
+      toast.error("Please select a membership plan.");
+      return;
+    }
     // if (data.captchaCode.toUpperCase() !== captchaCode) {
     //   toast.error("Invalid captcha code. Please try again.");
     //   generateCaptcha();
@@ -343,7 +547,8 @@ const JoinISIPage: React.FC = () => {
       const { isSubscribe, captchaCode, repeatPassword, ...rest } = data;
       const payload = {
         ...rest,
-        ...(rest.paymentType !== "FREE" ? { planId: PLAN_IDS[plan] } : {}),
+        // ...(rest.paymentType !== "FREE" && plan ? { planId: PLAN_IDS[plan] } : {}),
+        ...(rest.paymentType !== "FREE" ? { planId: getPlanId(plan) } : {}),
       };
       const response = await apiService.post("/user/", payload);
       console.log("API updated response :", response);
@@ -552,18 +757,18 @@ const JoinISIPage: React.FC = () => {
                         <tbody>
                           <tr className="border-t font-bold text-[#2D3748]">
                             <td className="py-2 pr-3">1 Year</td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-basic'} onChange={() => setPlan('1y-basic')} /> $75 USD</label></td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-sponsor'} onChange={() => setPlan('1y-sponsor')} /> $125 USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-basic'} onChange={() => setPlan('1y-basic')} /> ${getPrice('1y-basic')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-sponsor'} onChange={() => setPlan('1y-sponsor')} /> ${getPrice('1y-sponsor')} USD</label></td>
                           </tr>
                           <tr className="border-t font-bold text-[#2D3748]">
                             <td className="py-2 pr-3">5 Year</td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-basic'} onChange={() => setPlan('5y-basic')} /> $300 USD</label></td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-sponsor'} onChange={() => setPlan('5y-sponsor')} /> $500 USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-basic'} onChange={() => setPlan('5y-basic')} /> ${getPrice('5y-basic')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-sponsor'} onChange={() => setPlan('5y-sponsor')} /> ${getPrice('5y-sponsor')} USD</label></td>
                           </tr>
                           <tr className="border-t font-bold text-[#2D3748]">
                             <td className="py-2 pr-3">Life</td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-basic'} onChange={() => setPlan('life-basic')} /> $1000 USD</label></td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-sponsor'} onChange={() => setPlan('life-sponsor')} /> $5000 USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-basic'} onChange={() => setPlan('life-basic')} /> ${getPrice('life-basic')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-sponsor'} onChange={() => setPlan('life-sponsor')} /> ${getPrice('life-sponsor')} USD</label></td>
                           </tr>
                         </tbody>
                       </table>
