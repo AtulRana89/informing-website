@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { apiService } from "../../services";
+import { apiService, cookieUtils } from "../../services";
+import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
 const personalInfoSchema = z.object({
@@ -24,8 +25,6 @@ const personalInfoSchema = z.object({
 
 type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
 
-
-
 const PersonalInfoForm: React.FC = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
@@ -39,7 +38,7 @@ const PersonalInfoForm: React.FC = () => {
     handleSubmit,
     setValue,
     reset,
-    formState: { errors, touchedFields }
+    formState: { errors, touchedFields },
   } = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     mode: "onTouched",
@@ -57,23 +56,29 @@ const PersonalInfoForm: React.FC = () => {
       country: "",
       officePhone: "",
       personalPhone: "",
-    }
+    },
   });
 
+  // useEffect(() => {
+  //   if (userId) {
+  //     fetchUserProfile();
+  //   }
+  // }, [userId]);
+
   useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-    }
-  }, [userId]);
+    fetchUserProfile();
+  }, []);
 
   const fetchUserProfile = async () => {
     try {
       setIsFetching(true);
       setApiError("");
 
-      const responseobject = await apiService.get("/user/profile", {
-        params: { userId },
-      });
+      // const responseobject = await apiService.get("/user/profile", {
+      //   params: { userId },
+      // });
+
+      const responseobject = await apiService.get("/user/profile");
       const response = responseobject.data.response;
 
       if (response) {
@@ -96,7 +101,9 @@ const PersonalInfoForm: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Error fetching user profile:", err);
-      setApiError(err.response?.data?.data?.message || "Failed to load user profile");
+      setApiError(
+        err.response?.data?.data?.message || "Failed to load user profile"
+      );
     } finally {
       setIsFetching(false);
     }
@@ -125,9 +132,19 @@ const PersonalInfoForm: React.FC = () => {
   };
 
   const onSubmit = async (data: PersonalInfoFormData) => {
-    if (!userId) {
-      setApiError("User ID is required");
-      return;
+    // if (!userId) {
+    //   setApiError("User ID is required");
+    //   return;
+    // }
+
+    const token =
+      cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+      cookieUtils.getCookie("authToken");
+
+    let decoded: any = {};
+    if (token) {
+      decoded = jwtDecode(token);
+      console.log("Decoded Token:", decoded);
     }
 
     try {
@@ -148,7 +165,7 @@ const PersonalInfoForm: React.FC = () => {
       }
 
       const updatePayload = {
-        userId: userId,
+        userId: decoded.userId,
         personalTitle: data.personalTitle,
         personalName: data.personalName,
         middleInitial: data.middleInitial || "",
@@ -165,11 +182,13 @@ const PersonalInfoForm: React.FC = () => {
       };
 
       const res = await apiService.put("/user/update", updatePayload);
-      console.log(res, "nnn")
+      console.log(res, "nnn");
       toast.success("Profile updated successfully!");
     } catch (err: any) {
       console.error("Error updating profile:", err);
-      setApiError(err.response?.data?.data?.message || "Failed to update profile");
+      setApiError(
+        err.response?.data?.data?.message || "Failed to update profile"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +202,9 @@ const PersonalInfoForm: React.FC = () => {
   return (
     <div className="bg-white p-6">
       {isFetching && (
-        <div className="text-center text-[#295F9A] mb-4">Loading profile...</div>
+        <div className="text-center text-[#295F9A] mb-4">
+          Loading profile...
+        </div>
       )}
 
       {apiError && (
@@ -204,10 +225,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("personalTitle")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.personalTitle && touchedFields.personalTitle && (
-                <p className="text-red-500 text-xs mt-1">{errors.personalTitle.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.personalTitle.message}
+                </p>
               )}
             </div>
 
@@ -219,10 +242,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("gender")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.gender && touchedFields.gender && (
-                <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.gender.message}
+                </p>
               )}
             </div>
           </div>
@@ -245,10 +270,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("personalName")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.personalName && touchedFields.personalName && (
-                <p className="text-red-500 text-xs mt-1">{errors.personalName.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.personalName.message}
+                </p>
               )}
             </div>
 
@@ -260,10 +287,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("middleInitial")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.middleInitial && touchedFields.middleInitial && (
-                <p className="text-red-500 text-xs mt-1">{errors.middleInitial.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.middleInitial.message}
+                </p>
               )}
             </div>
 
@@ -275,10 +304,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("familyName")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.familyName && touchedFields.familyName && (
-                <p className="text-red-500 text-xs mt-1">{errors.familyName.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.familyName.message}
+                </p>
               )}
             </div>
           </div>
@@ -292,7 +323,7 @@ const PersonalInfoForm: React.FC = () => {
 
           <div
             className="p-8 rounded-[12px]"
-            style={{ backgroundColor: '#F5F5F5' }}
+            style={{ backgroundColor: "#F5F5F5" }}
           >
             <div className="border-2 border-dashed border-gray-300 rounded-[12px] p-8">
               <div className="flex items-center justify-center gap-4">
@@ -347,10 +378,12 @@ const PersonalInfoForm: React.FC = () => {
               type="text"
               {...register("address")}
               className="w-full h-10 rounded-md border-0 px-3"
-              style={{ backgroundColor: '#F5F5F5' }}
+              style={{ backgroundColor: "#F5F5F5" }}
             />
             {errors.address && touchedFields.address && (
-              <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.address.message}
+              </p>
             )}
           </div>
 
@@ -363,10 +396,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("city")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.city && touchedFields.city && (
-                <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.city.message}
+                </p>
               )}
             </div>
 
@@ -378,10 +413,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("stateProvince")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.stateProvince && touchedFields.stateProvince && (
-                <p className="text-red-500 text-xs mt-1">{errors.stateProvince.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.stateProvince.message}
+                </p>
               )}
             </div>
 
@@ -393,10 +430,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("postalCode")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.postalCode && touchedFields.postalCode && (
-                <p className="text-red-500 text-xs mt-1">{errors.postalCode.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.postalCode.message}
+                </p>
               )}
             </div>
           </div>
@@ -410,7 +449,7 @@ const PersonalInfoForm: React.FC = () => {
                 <select
                   {...register("country")}
                   className="w-full h-10 rounded-md border-0 px-3 pr-8 appearance-none"
-                  style={{ backgroundColor: '#F5F5F5' }}
+                  style={{ backgroundColor: "#F5F5F5" }}
                 >
                   <option value="">Select Country</option>
                   <option value="US">United States</option>
@@ -420,7 +459,9 @@ const PersonalInfoForm: React.FC = () => {
                 </select>
               </div>
               {errors.country && touchedFields.country && (
-                <p className="text-red-500 text-xs mt-1">{errors.country.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.country.message}
+                </p>
               )}
             </div>
 
@@ -432,10 +473,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("officePhone")}
                 className="w-full h-10 rounded-md border-0 px-3"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.officePhone && touchedFields.officePhone && (
-                <p className="text-red-500 text-xs mt-1">{errors.officePhone.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.officePhone.message}
+                </p>
               )}
             </div>
 
@@ -447,10 +490,12 @@ const PersonalInfoForm: React.FC = () => {
                 type="text"
                 {...register("personalPhone")}
                 className="w-full h-12 rounded-md border-0 px-4"
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.personalPhone && touchedFields.personalPhone && (
-                <p className="text-red-500 text-xs mt-1">{errors.personalPhone.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.personalPhone.message}
+                </p>
               )}
             </div>
           </div>

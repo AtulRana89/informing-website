@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { apiService } from "../../services";
+import { apiService, cookieUtils } from "../../services";
+import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
 const academicInfoSchema = z.object({
@@ -25,9 +26,6 @@ const academicInfoSchema = z.object({
     return true;
   }, "File size must be less than 2MB"),
 });
-
-
-
 
 // // Define the validation schema
 // const academicInfoSchema = z
@@ -80,8 +78,6 @@ const academicInfoSchema = z.object({
 
 type AcademicInfoFormData = z.infer<typeof academicInfoSchema>;
 
-
-
 const AcademicInfoForm: React.FC = () => {
   const [cvFileName, setCvFileName] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +89,7 @@ const AcademicInfoForm: React.FC = () => {
     handleSubmit,
     setValue,
     reset,
-    formState: { errors, touchedFields }
+    formState: { errors, touchedFields },
   } = useForm<AcademicInfoFormData>({
     resolver: zodResolver(academicInfoSchema),
     mode: "onTouched",
@@ -109,30 +105,40 @@ const AcademicInfoForm: React.FC = () => {
       academicPostalCode: "",
       shortBio: "",
       resume: null,
-    }
+    },
   });
 
+  const token =
+    cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+    cookieUtils.getCookie("authToken");
+
+  let decoded: any = {};
+  if (token) {
+    decoded = jwtDecode(token);
+    console.log("Decoded Token:", decoded);
+  }
+
   useEffect(() => {
-    if (userId) {
+   
       fetchUserProfile();
-    } else {
-      setIsFetchingData(false);
-    }
-  }, [userId]);
+   
+  }, []);
 
   const fetchUserProfile = async () => {
     setIsFetchingData(true);
     try {
-      console.log("Fetching user profile for userId:", userId);
+      
       const response = await apiService.get(`/user/profile`, {
-        params: { userId },
+        params: { userId: decoded.userId },
       });
 
+      
       console.log("Profile data received:", response);
       const data = response.data?.response || response;
 
       // Map API fields to form fields
-      if (data.affiliationUniversity) setValue("affiliation", data.affiliationUniversity);
+      if (data.affiliationUniversity)
+        setValue("affiliation", data.affiliationUniversity);
       if (data.department) setValue("department", data.department);
       if (data.positionTitle) setValue("positionTitle", data.positionTitle);
       if (data.orcid) setValue("orcid", data.orcid);
@@ -141,7 +147,10 @@ const AcademicInfoForm: React.FC = () => {
     } catch (error: any) {
       console.error("Error fetching user profile:", error);
       if (error?.response?.status !== 404) {
-        console.error("Failed to fetch profile:", error?.response?.data?.message);
+        console.error(
+          "Failed to fetch profile:",
+          error?.response?.data?.message
+        );
       }
     } finally {
       setIsFetchingData(false);
@@ -196,7 +205,7 @@ const AcademicInfoForm: React.FC = () => {
     try {
       // Prepare payload with only the fields from this form
       const payload: any = {
-        userId: userId,
+        userId: decoded.userId,
         affiliationUniversity: data.affiliation,
         department: data.department,
         positionTitle: data.positionTitle || "",
@@ -222,7 +231,7 @@ const AcademicInfoForm: React.FC = () => {
       console.error("Error updating academic info:", error);
       toast.error(
         error?.response?.data?.message ||
-        "Failed to update academic information. Please try again."
+          "Failed to update academic information. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -237,7 +246,9 @@ const AcademicInfoForm: React.FC = () => {
   return (
     <div className="bg-white">
       {isFetchingData && (
-        <div className="text-center text-[#FF4C7D] mb-4">Loading profile...</div>
+        <div className="text-center text-[#FF4C7D] mb-4">
+          Loading profile...
+        </div>
       )}
 
       <div className="space-y-6">
@@ -256,7 +267,9 @@ const AcademicInfoForm: React.FC = () => {
                 style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.affiliation && touchedFields.affiliation && (
-                <p className="text-red-500 text-xs mt-1">{errors.affiliation.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.affiliation.message}
+                </p>
               )}
             </div>
 
@@ -271,7 +284,9 @@ const AcademicInfoForm: React.FC = () => {
                 style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.department && touchedFields.department && (
-                <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.department.message}
+                </p>
               )}
             </div>
           </div>
@@ -289,7 +304,9 @@ const AcademicInfoForm: React.FC = () => {
                 style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.positionTitle && touchedFields.positionTitle && (
-                <p className="text-red-500 text-xs mt-1">{errors.positionTitle.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.positionTitle.message}
+                </p>
               )}
             </div>
 
@@ -304,7 +321,9 @@ const AcademicInfoForm: React.FC = () => {
                 style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.orcid && touchedFields.orcid && (
-                <p className="text-red-500 text-xs mt-1">{errors.orcid.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.orcid.message}
+                </p>
               )}
             </div>
           </div>
@@ -321,7 +340,9 @@ const AcademicInfoForm: React.FC = () => {
               style={{ backgroundColor: "#F5F5F5" }}
             />
             {errors.academicAddress && touchedFields.academicAddress && (
-              <p className="text-red-500 text-xs mt-1">{errors.academicAddress.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.academicAddress.message}
+              </p>
             )}
           </div>
 
@@ -338,7 +359,9 @@ const AcademicInfoForm: React.FC = () => {
                 style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.academicCity && touchedFields.academicCity && (
-                <p className="text-red-500 text-xs mt-1">{errors.academicCity.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.academicCity.message}
+                </p>
               )}
             </div>
 
@@ -352,9 +375,12 @@ const AcademicInfoForm: React.FC = () => {
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
               />
-              {errors.academicStateProvince && touchedFields.academicStateProvince && (
-                <p className="text-red-500 text-xs mt-1">{errors.academicStateProvince.message}</p>
-              )}
+              {errors.academicStateProvince &&
+                touchedFields.academicStateProvince && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.academicStateProvince.message}
+                  </p>
+                )}
             </div>
           </div>
 
@@ -371,7 +397,9 @@ const AcademicInfoForm: React.FC = () => {
                 style={{ backgroundColor: "#F5F5F5" }}
               />
               {errors.academicCountry && touchedFields.academicCountry && (
-                <p className="text-red-500 text-xs mt-1">{errors.academicCountry.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.academicCountry.message}
+                </p>
               )}
             </div>
 
@@ -385,9 +413,12 @@ const AcademicInfoForm: React.FC = () => {
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
               />
-              {errors.academicPostalCode && touchedFields.academicPostalCode && (
-                <p className="text-red-500 text-xs mt-1">{errors.academicPostalCode.message}</p>
-              )}
+              {errors.academicPostalCode &&
+                touchedFields.academicPostalCode && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.academicPostalCode.message}
+                  </p>
+                )}
             </div>
           </div>
 
@@ -424,7 +455,9 @@ const AcademicInfoForm: React.FC = () => {
               </div>
             </div>
             {errors.resume && (
-              <p className="text-red-500 text-xs mt-1">{errors.resume.message as string}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.resume.message as string}
+              </p>
             )}
           </div>
         </div>
@@ -441,7 +474,9 @@ const AcademicInfoForm: React.FC = () => {
             style={{ backgroundColor: "#F5F5F5" }}
           />
           {errors.shortBio && touchedFields.shortBio && (
-            <p className="text-red-500 text-xs mt-1">{errors.shortBio.message}</p>
+            <p className="text-red-500 text-xs mt-1">
+              {errors.shortBio.message}
+            </p>
           )}
         </div>
 

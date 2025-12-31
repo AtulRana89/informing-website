@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { apiService } from "../../services";
+import { apiService, cookieUtils } from "../../services";
+import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
 const preferencesSchema = z.object({
@@ -44,6 +45,16 @@ const PreferencesForm: React.FC = () => {
     }
   });
 
+  const token =
+      cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+      cookieUtils.getCookie("authToken");
+  
+    let decoded: any = {};
+    if (token) {
+      decoded = jwtDecode(token);
+      console.log("Decoded Token:", decoded);
+    }
+
   useEffect(() => {
     if (userId) {
       fetchUserPreferences();
@@ -56,7 +67,7 @@ const PreferencesForm: React.FC = () => {
     setIsFetchingData(true);
     try {
       const response = await apiService.get("/user/profile", {
-        params: { userId },
+        params: { userId: decoded.userId },
       });
       const data = response.data?.response || response;
 
@@ -83,13 +94,13 @@ const PreferencesForm: React.FC = () => {
   };
 
   const onSubmit = async (data: PreferencesFormData) => {
-    if (!userId) {
+    if (!decoded.userId) {
       toast.error("User ID is required");
       return;
     }
 
     const payload = {
-      userId,
+      userId:decoded.userId,
       unsubscribe: data.unsubscribeNewsletters,
       allowProfile: data.allowBasicProfile,
       websiteUrl: data.websiteURL || "",

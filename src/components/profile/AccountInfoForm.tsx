@@ -3,42 +3,54 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { apiService } from "../../services";
+import { apiService, cookieUtils } from "../../services";
+import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
-const accountInfoSchema = z.object({
-  primaryEmail: z.string().email("Please enter a valid email address"),
-  receivePrimaryEmails: z.boolean(),
-  secondaryEmail: z.string().email("Please enter a valid email address").optional(),
-  receiveSecondaryEmails: z.boolean(),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().optional(),
-  confirmPassword: z.string().optional(),
-  memberUntil: z.string().optional(),
-}).refine((data) => {
-  // If current password is provided, new password must also be provided
-  if (data.currentPassword && !data.newPassword) {
-    return false;
-  }
-  return true;
-}, {
-  message: "New password is required when changing password",
-  path: ["newPassword"],
-}).refine((data) => {
-  // If new password is provided, it must match confirm password
-  if (data.newPassword && data.newPassword !== data.confirmPassword) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const accountInfoSchema = z
+  .object({
+    primaryEmail: z.string().email("Please enter a valid email address"),
+    receivePrimaryEmails: z.boolean(),
+    secondaryEmail: z
+      .string()
+      .email("Please enter a valid email address")
+      .optional(),
+    receiveSecondaryEmails: z.boolean(),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().optional(),
+    confirmPassword: z.string().optional(),
+    memberUntil: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // If current password is provided, new password must also be provided
+      if (data.currentPassword && !data.newPassword) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "New password is required when changing password",
+      path: ["newPassword"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If new password is provided, it must match confirm password
+      if (data.newPassword && data.newPassword !== data.confirmPassword) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    }
+  );
 
 type AccountInfoFormData = z.infer<typeof accountInfoSchema>;
 
 // Mock API service
-
 
 const AccountInfoForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +64,7 @@ const AccountInfoForm: React.FC = () => {
     setValue,
     reset,
     watch,
-    formState: { errors, touchedFields }
+    formState: { errors, touchedFields },
   } = useForm<AccountInfoFormData>({
     resolver: zodResolver(accountInfoSchema),
     mode: "onTouched",
@@ -64,18 +76,26 @@ const AccountInfoForm: React.FC = () => {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-      memberUntil: ""
-    }
+      memberUntil: "",
+    },
   });
+
+  const token =
+    cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+    cookieUtils.getCookie("authToken");
+
+  let decoded: any = {};
+  if (token) {
+    decoded = jwtDecode(token);
+    console.log("Decoded Token:", decoded);
+  }
 
   const currentPassword = watch("currentPassword");
   const newPassword = watch("newPassword");
 
   useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-    }
-  }, [userId]);
+    fetchUserProfile();
+  }, []);
 
   const fetchUserProfile = async () => {
     try {
@@ -83,15 +103,19 @@ const AccountInfoForm: React.FC = () => {
       setApiError("");
 
       const responseobject = await apiService.get("/user/profile", {
-        params: { userId },
+        params: { userId: decoded.userId },
       });
+
       const response = responseobject.data.response;
 
       if (response) {
         setValue("primaryEmail", response.email || "");
         setValue("receivePrimaryEmails", response.receivePrimaryEmail ?? true);
         setValue("secondaryEmail", response.receiveSecondaryEmail || "");
-        setValue("receiveSecondaryEmails", response.receiveReminderEmail ?? true);
+        setValue(
+          "receiveSecondaryEmails",
+          response.receiveReminderEmail ?? true
+        );
         setValue("memberUntil", response.memberUntil || "");
       }
     } catch (err: any) {
@@ -112,18 +136,13 @@ const AccountInfoForm: React.FC = () => {
   const onSubmit = async (data: AccountInfoFormData) => {
     console.log("Form submitted with data:", data);
 
-    if (!userId) {
-      setApiError("User ID is required");
-      return;
-    }
-
     try {
       setIsLoading(true);
       setApiError("");
 
       // Prepare update payload
       const updatePayload: any = {
-        userId: userId,
+        userId: decoded.userId,
         email: data.primaryEmail,
         receivePrimaryEmail: data.receivePrimaryEmails,
         receiveReminderEmail: data.receiveSecondaryEmails,
@@ -150,7 +169,9 @@ const AccountInfoForm: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Error updating account info:", err);
-      setApiError(err.response?.data?.message || "Failed to update account information");
+      setApiError(
+        err.response?.data?.message || "Failed to update account information"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +185,9 @@ const AccountInfoForm: React.FC = () => {
   return (
     <div className="bg-white">
       {isFetching && (
-        <div className="text-center text-[#FF4C7D] mb-4">Loading account info...</div>
+        <div className="text-center text-[#FF4C7D] mb-4">
+          Loading account info...
+        </div>
       )}
 
       {apiError && (
@@ -188,7 +211,9 @@ const AccountInfoForm: React.FC = () => {
               style={{ backgroundColor: "#F5F5F5" }}
             />
             {errors.primaryEmail && touchedFields.primaryEmail && (
-              <p className="text-red-500 text-xs mt-1">{errors.primaryEmail.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.primaryEmail.message}
+              </p>
             )}
             <label className="flex items-center gap-2 text-sm mt-2">
               <input
@@ -212,7 +237,9 @@ const AccountInfoForm: React.FC = () => {
               style={{ backgroundColor: "#F5F5F5" }}
             />
             {errors.secondaryEmail && touchedFields.secondaryEmail && (
-              <p className="text-red-500 text-xs mt-1">{errors.secondaryEmail.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.secondaryEmail.message}
+              </p>
             )}
             <label className="flex items-center gap-2 text-sm mt-2">
               <input
@@ -237,7 +264,9 @@ const AccountInfoForm: React.FC = () => {
               style={{ backgroundColor: "#F5F5F5" }}
             />
             {errors.currentPassword && touchedFields.currentPassword && (
-              <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.currentPassword.message}
+              </p>
             )}
           </div>
         </div>
@@ -258,7 +287,9 @@ const AccountInfoForm: React.FC = () => {
               disabled={!currentPassword}
             />
             {errors.newPassword && touchedFields.newPassword && (
-              <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.newPassword.message}
+              </p>
             )}
           </div>
 
@@ -276,7 +307,9 @@ const AccountInfoForm: React.FC = () => {
               disabled={!newPassword}
             />
             {errors.confirmPassword && touchedFields.confirmPassword && (
-              <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
 
@@ -287,7 +320,8 @@ const AccountInfoForm: React.FC = () => {
               <span className="text-xs font-normal">
                 (Become An ISI Member To Receive Access To Additional Features.
                 <span className="text-[#295F9A] hover:underline cursor-pointer">
-                  {" "}View Options
+                  {" "}
+                  View Options
                 </span>
                 )
               </span>
@@ -305,7 +339,8 @@ const AccountInfoForm: React.FC = () => {
         {/* Password Change Info */}
         {currentPassword && (
           <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-sm">
-            <strong>Note:</strong> To change your password, please enter your current password, new password, and confirm the new password.
+            <strong>Note:</strong> To change your password, please enter your
+            current password, new password, and confirm the new password.
           </div>
         )}
 

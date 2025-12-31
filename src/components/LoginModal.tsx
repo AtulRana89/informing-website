@@ -68,6 +68,7 @@ const LoginModal: React.FC<Props> = ({ open, onClose }) => {
         decoded = jwtDecode(token);
         console.log("Decoded Token:", decoded);
       }
+      console.log(decoded,"token decoded")
       onClose();
       if (decoded?.role == "admin") {
         navigate("/member/dashboard");

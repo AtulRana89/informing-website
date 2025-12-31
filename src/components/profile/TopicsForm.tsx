@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
-import { apiService } from "../../services";
+import { apiService, cookieUtils } from "../../services";
+import { jwtDecode } from "jwt-decode";
 
 // Types
 interface SubTopic {
@@ -56,6 +57,16 @@ const TopicsForm: React.FC = () => {
       selectedTopics: [],
     }
   });
+
+  const token =
+      cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+      cookieUtils.getCookie("authToken");
+  
+    let decoded: any = {};
+    if (token) {
+      decoded = jwtDecode(token);
+      console.log("Decoded Token:", decoded);
+    }
 
   useEffect(() => {
     fetchTopics();
@@ -143,15 +154,15 @@ const TopicsForm: React.FC = () => {
   };
 
   const onSubmit = async (data: TopicsFormData) => {
-    if (!userId) {
-      toast.error("User ID is required");
-      return;
-    }
+    // if (decoded.userId) {
+    //   toast.error("User ID is required");
+    //   return;
+    // }
 
     setIsLoading(true);
     try {
       const payload = {
-        userId: userId,
+        userId: decoded.userId,
         selectedTopics: data.selectedTopics,
       };
 

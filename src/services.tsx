@@ -45,6 +45,7 @@ const API_BASE_URL =
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -141,7 +142,7 @@ apiClient.interceptors.response.use(
 
           // Redirect to login page
           if (window.location.pathname !== "/login") {
-            window.location.href = "/admin/login";
+            //window.location.href = "/admin/login";
           }
           break;
 
