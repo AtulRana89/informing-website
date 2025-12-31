@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { apiService, cookieUtils } from "../../services";
 import { jwtDecode } from "jwt-decode";
+import { Eye, EyeOff } from "lucide-react";
 
 // Zod Schema
 const accountInfoSchema = z
@@ -57,6 +58,9 @@ const AccountInfoForm: React.FC = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [apiError, setApiError] = useState("");
   const userId = "user123"; // Replace with actual userId
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -256,13 +260,25 @@ const AccountInfoForm: React.FC = () => {
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
               Change My Password
             </label>
-            <input
-              type="password"
-              {...register("currentPassword")}
-              placeholder="Current password"
-              className="w-full h-10 rounded-md border-0 px-3"
-              style={{ backgroundColor: "#F5F5F5" }}
-            />
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                {...register("currentPassword")}
+                placeholder="Current password"
+                className="w-full h-10 rounded-md border-0 px-3 pr-10"
+                style={{ backgroundColor: "#F5F5F5" }}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
             {errors.currentPassword && touchedFields.currentPassword && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.currentPassword.message}
@@ -278,14 +294,27 @@ const AccountInfoForm: React.FC = () => {
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
               New Password
             </label>
-            <input
-              type="password"
-              {...register("newPassword")}
-              placeholder="New password"
-              className="w-full h-10 rounded-md border-0 px-3"
-              style={{ backgroundColor: "#F5F5F5" }}
-              disabled={!currentPassword}
-            />
+
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                {...register("newPassword")}
+                placeholder="New password"
+                className="w-full h-10 rounded-md border-0 px-3 pr-10"
+                style={{ backgroundColor: "#F5F5F5" }}
+                disabled={!currentPassword}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 disabled:opacity-50"
+                disabled={!currentPassword}
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
             {errors.newPassword && touchedFields.newPassword && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.newPassword.message}
@@ -298,14 +327,27 @@ const AccountInfoForm: React.FC = () => {
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
               Type Your New Password Again
             </label>
-            <input
-              type="password"
-              {...register("confirmPassword")}
-              placeholder="Confirm password"
-              className="w-full h-10 rounded-md border-0 px-3"
-              style={{ backgroundColor: "#F5F5F5" }}
-              disabled={!newPassword}
-            />
+
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                {...register("confirmPassword")}
+                placeholder="Confirm password"
+                className="w-full h-10 rounded-md border-0 px-3 pr-10"
+                style={{ backgroundColor: "#F5F5F5" }}
+                disabled={!newPassword}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 disabled:opacity-50"
+                disabled={!newPassword}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
             {errors.confirmPassword && touchedFields.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.confirmPassword.message}
