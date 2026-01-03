@@ -3,6 +3,7 @@ import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import React, { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useLocation, useNavigate } from 'react-router-dom';
 import * as z from "zod";
 import isiIcon from '../assets/images/isi-icon.png';
 import PublicFooter from '../components/PublicFooter';
@@ -85,6 +86,46 @@ const JoinISIPage: React.FC = () => {
     vault: true,
     components: 'buttons',
   };
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleSuccess = async () => {
+      const params = new URLSearchParams(location.search);
+      // alert(params)
+      console.log("params :", params)
+      const paymentId = params.get('paymentId');
+      const payerId = params.get('PayerID');
+      const token = params.get('token');
+      const subscriptionId = params.get('subscriptionId');
+
+      try {
+        // Verify payment with backend
+        if (paymentId && payerId) {
+          await apiService.post("/user/verify-payment", {
+            paymentId,
+            payerId,
+            token,
+            subscriptionId
+          });
+        }
+
+        // Show success message in session storage to pass to join page
+        sessionStorage.setItem('paymentSuccess', 'true');
+        sessionStorage.setItem('subscriptionId', subscriptionId || '');
+
+        // Redirect to join-isi page
+        navigate('/join-isi');
+
+      } catch (error) {
+        console.error("Payment verification error:", error);
+        navigate('/join-isi');
+      }
+    };
+
+    handleSuccess();
+  }, [location, navigate]);
 
   useEffect(() => {
     const data: PayPalPlan[] = [
