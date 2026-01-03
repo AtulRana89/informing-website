@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
@@ -73,10 +74,12 @@ interface PayPalPlan {
 }
 
 const JoinISIPage: React.FC = () => {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<PayPalPlan[]>([]);
   const [plan, setPlan] = useState<PlanType | null>(null);
   // const [plan, setPlan] = React.useState<'1y-basic' | '1y-sponsor' | '5y-basic' | '5y-sponsor' | 'life-basic' | 'life-sponsor'>('1y-basic');
   const [captchaCode, setCaptchaCode] = useState("7VJ7R1EE");
+  const [selectedMembershipType, setSelectedMembershipType] = useState<'FREE' | 'MEMBER'>('FREE');
 
   const paypalOptions = {
     clientId: "ATy1yaAt6LRPKybBgy6Yuy_pIKRSENq67tm7il2NpBlUPYznsI-JIDn_hE2UUvVj9U6t6HKXuwzYEmk1",
@@ -533,8 +536,26 @@ const JoinISIPage: React.FC = () => {
     return plans.find(p => p.planType === type)?.id;
   };
 
+  const getMembershipType = (): "FREE" | "BASIC" | "SPONSORING" => {
+    if (selectedMembershipType === "FREE") {
+      return "FREE";
+    }
+    
+    if (!plan) {
+      return "FREE";
+    }
+    
+    // Check if plan is sponsoring type
+    if (plan.includes("sponsor")) {
+      return "SPONSORING";
+    }
+    
+    // Otherwise it's a basic plan
+    return "BASIC";
+  };
+
   const onSubmit = async (data: CreateUserFormData) => {
-    if ((data.paymentType !== "FREE" && !plan)) {
+    if ((selectedMembershipType !== "FREE" && !plan)) {
       toast.error("Please select a membership plan.");
       return;
     }
@@ -545,22 +566,22 @@ const JoinISIPage: React.FC = () => {
     // }
     try {
       const { isSubscribe, captchaCode, repeatPassword, ...rest } = data;
+      const membershipType = getMembershipType();
       const payload = {
         ...rest,
-        // ...(rest.paymentType !== "FREE" && plan ? { planId: PLAN_IDS[plan] } : {}),
-        ...(rest.paymentType !== "FREE" ? { paymentType: "MEMBER", planId: getPlanId(plan) } : {}),
+        membershipType,
+        ...(selectedMembershipType !== "FREE" ? { paymentType: "MEMBER", planId: getPlanId(plan) } : { paymentType: "FREE" }),
       };
       const response = await apiService.post("/user/", payload);
       console.log("API updated response :", response);
-      if (response?.data?.response?.approvalUrl) {
-        window.location.href = response?.data?.response?.approvalUrl;
-      } else {
-        throw new Error("No approval URL received");
-      }
+      
+      // Navigate to /about after successful signup for both free and paid memberships
+      toast.success("Sign up successful!");
+      navigate("/about");
 
       // toast.success("user updated succesfully");
     } catch (error: any) {
-      toast.error(error?.response?.data?.data?.message);
+      toast.error(error?.response?.data?.data?.message || "Sign up failed. Please try again.");
       console.error("Error updating:", error);
     }
   };
@@ -715,14 +736,19 @@ const JoinISIPage: React.FC = () => {
               {/* Pricing cards (reuse Community styles) */}
               <div className="pt-12 grid grid-cols-1 md:grid-cols-2 justify-center items-stretch gap-12 mt-12 max-w-[900px] mx-auto">
                 {/* Associate */}
-                <div className="shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col">
+                <div 
+                  onClick={() => setSelectedMembershipType('FREE')}
+                  className={`shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col cursor-pointer transition-all ${
+                    selectedMembershipType === 'FREE' ? 'ring-2 ring-[#295F9A] bg-[#295f9a15]' : ''
+                  }`}
+                >
                   <div className="p-5 flex-1">
                     <div className="flex items-start justify-between">
                       <div className="text-[24px] font-semibold text-[#2D3748] mb-5">ISI associate</div>
                       <img src={isiIcon} alt="isi" className="w-[25px] object-contain" />
                     </div>
                     <div className="mt-5 h-28 bg-[#295f9a47] flex items-center justify-center text-[24px] font-semibold text-[#2D3748] mb-5">FREE</div>
-                    <div className="mt-4 text-[16px] text-[#4A5568] mb-4">ISI Associates receive access to the following benefits:</div>
+                    <div className="mt-4 text-[16px] text-[#4A5568] mb-4">ISI Associates receive access to the following benefits ss:</div>
                     <ul className="my-4 space-y-4 text-[16px] text-[#000] font-medium max-w-[250px] w-full mx-auto">
                       {['Article Submission', 'Article Review', 'Personalized Dashboard'].map(i => (
                         <li key={i} className="flex items-center gap-2">
@@ -732,13 +758,15 @@ const JoinISIPage: React.FC = () => {
                       ))}
                     </ul>
                   </div>
-                  <div className="p-5 bg-[#295F9A] mt-auto">
-                    <button onClick={() => setValue("paymentType", "FREE")} type='submit' className="w-full h-11 text-white font-medium">Proceed to Payment</button>
-                  </div>
                 </div>
 
                 {/* Member */}
-                <div className="shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col">
+                <div 
+                  onClick={() => setSelectedMembershipType('MEMBER')}
+                  className={`shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col cursor-pointer transition-all ${
+                    selectedMembershipType === 'MEMBER' ? 'ring-2 ring-[#295F9A] bg-[#295f9a15]' : ''
+                  }`}
+                >
                   <div className="p-5 flex-1">
                     <div className="flex items-start justify-between">
                       <div className="text-[24px] font-semibold text-[#2D3748] mb-5">ISI Member</div>
@@ -757,18 +785,18 @@ const JoinISIPage: React.FC = () => {
                         <tbody>
                           <tr className="border-t font-bold text-[#2D3748]">
                             <td className="py-2 pr-3">1 Year</td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-basic'} onChange={() => setPlan('1y-basic')} /> ${getPrice('1y-basic')} USD</label></td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-sponsor'} onChange={() => setPlan('1y-sponsor')} /> ${getPrice('1y-sponsor')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-basic'} onChange={(e) => { e.stopPropagation(); setPlan('1y-basic'); setSelectedMembershipType('MEMBER'); }} /> ${getPrice('1y-basic')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year1" checked={plan === '1y-sponsor'} onChange={(e) => { e.stopPropagation(); setPlan('1y-sponsor'); setSelectedMembershipType('MEMBER'); }} /> ${getPrice('1y-sponsor')} USD</label></td>
                           </tr>
                           <tr className="border-t font-bold text-[#2D3748]">
                             <td className="py-2 pr-3">5 Year</td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-basic'} onChange={() => setPlan('5y-basic')} /> ${getPrice('5y-basic')} USD</label></td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-sponsor'} onChange={() => setPlan('5y-sponsor')} /> ${getPrice('5y-sponsor')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-basic'} onChange={(e) => { e.stopPropagation(); setPlan('5y-basic'); setSelectedMembershipType('MEMBER'); }} /> ${getPrice('5y-basic')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="year5" checked={plan === '5y-sponsor'} onChange={(e) => { e.stopPropagation(); setPlan('5y-sponsor'); setSelectedMembershipType('MEMBER'); }} /> ${getPrice('5y-sponsor')} USD</label></td>
                           </tr>
                           <tr className="border-t font-bold text-[#2D3748]">
                             <td className="py-2 pr-3">Life</td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-basic'} onChange={() => setPlan('life-basic')} /> ${getPrice('life-basic')} USD</label></td>
-                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-sponsor'} onChange={() => setPlan('life-sponsor')} /> ${getPrice('life-sponsor')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-basic'} onChange={(e) => { e.stopPropagation(); setPlan('life-basic'); setSelectedMembershipType('MEMBER'); }} /> ${getPrice('life-basic')} USD</label></td>
+                            <td className="py-2 pr-3"><label className="inline-flex items-center gap-2"><input className="accent-[#295F9A]" type="radio" name="life" checked={plan === 'life-sponsor'} onChange={(e) => { e.stopPropagation(); setPlan('life-sponsor'); setSelectedMembershipType('MEMBER'); }} /> ${getPrice('life-sponsor')} USD</label></td>
                           </tr>
                         </tbody>
                       </table>
@@ -784,14 +812,11 @@ const JoinISIPage: React.FC = () => {
                       ))}
                     </ul>
                   </div>
-                  <div className="p-5 bg-[#295F9A] mt-auto">
-                    <button onClick={() => setValue("paymentType", "MEMBER")} type='submit' className="w-full h-11 text-white font-medium">Proceed to Payment</button>
-                  </div>
                 </div>
               </div>
 
               <div className="text-center mt-10 pt-12 pb-12">
-                <button className="px-12 py-3 rounded-[14px] text-white text-[16px] font-medium" style={{ backgroundColor: '#FF4C7D' }}>Sign Up</button>
+                <button type="submit" className="px-12 py-3 rounded-[14px] text-white text-[16px] font-medium" style={{ backgroundColor: '#FF4C7D' }}>Sign Up</button>
                 <div className="flex items-center justify-center gap-8 text-sm text-[#3E3232] mt-8">
                   <a href="#" className="hover:underline">ISI Website</a>
                   <a href="#" className="hover:underline">Privacy Policy</a>

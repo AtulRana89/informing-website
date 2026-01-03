@@ -1,8 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
+import { apiService } from '../services';
+
+interface ContentItem {
+  _id?: string;
+  pageType?: string;
+  description?: string;
+  insertDate?: number;
+  [key: string]: any;
+}
+
+interface ApiResponse {
+  data?: {
+    list?: ContentItem[];
+    totalCount?: number;
+    message?: string;
+  };
+  status?: number;
+  message?: string;
+}
 
 const AboutPage: React.FC = () => {
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAboutContent();
+  }, []);
+
+  const fetchAboutContent = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.get<ApiResponse>('/content/list', {
+        params: { type: 'about' }
+      });
+      
+      // Extract content from response.data.list
+      const contents = response?.data?.list || [];
+      setContent(contents);
+    } catch (err: any) {
+      console.error('Error fetching about content:', err);
+      setError('Failed to load content. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to render HTML content safely
+  const renderContent = (htmlContent: string) => {
+    return { __html: htmlContent };
+  };
+
   return (
     <div className="min-h-screen bg-white font-['Roboto']">
       <PublicHeader />
@@ -12,85 +63,40 @@ const AboutPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <div className="bg-[#f5f5f5] rounded-lg px-4 py-3 mb-6">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl text-gray-900">Informing Science Institute</h1>
-              </div>
-              <p className="text-sm text-[#3E3232] mb-6 mt-5">Exploring Better Ways to Inform.</p>
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#295F9A] mx-auto mb-4"></div>
+                    <p className="text-[#3E3232]">Loading content...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <p className="text-red-600">{error}</p>
+                </div>
+              ) : content && content.length > 0 ? (
+                <div>
+                  {content.map((item, index) => (
+                    <div key={item._id || index} className="mb-8">
+                      <div className="bg-[#f5f5f5] rounded-lg px-4 py-3 mb-6">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl text-gray-900">Informing Science Institute</h1>
+                      </div>
+                      {item.description && (
+                        <div 
+                          className="text-[#3E3232] text-sm leading-6 prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={renderContent(item.description)}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-[#f5f5f5] rounded-lg px-4 py-3 mb-6">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl text-gray-900">Informing Science Institute</h1>
+                </div>
+              )}
 
-              {/* About Section */}
-              <section className="space-y-4 mb-8">
-                <h2 className="text-xl text-gray-900">About the Informing Science Institute</h2>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  The Informing Science Institute (ISI) is a 501(c)3 charitable association under US tax laws. 
-                  <a href="https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=7F4XL35ELFWJG&source=url&ssrt=1757226439331" className="text-[#4282C8] underline ml-1 hover:text-[#295F9A] transition-colors">Make your tax-deductible contribution here</a>.
-                </p>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  Founded in 1998, it is a global community of academics shaping the future of informing science.
-                  Informing science is the transdisciplinary quest to discover better ways to inform. The importance of
-                  transdisciplinarity in solving real world problems is explored by Andrew Hargadon in his 2003 book
-                  <span className="italic"> How Breakthroughs Happen</span>.
-                </p>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  Submitting or publishing papers in any of ISI's peer-reviewed online academic journals is free for ISI
-                  Members. Non-members can choose to join or pay a modest article publication fee to cover some of the
-                  costs for publication. With the help of sponsoring institutions, ISI hosts the highly regarded annual
-                  <a href="/Conferences" className="text-[#4282C8] underline ml-1 hover:text-[#295F9A] transition-colors">InSITE conference</a> in a variety of international locations. ISI electronic publications
-                  and e-books are available for free. Hard copies of ISI books and publications are available in the
-                  <a href="http://ispress.org/" className="text-[#4282C8] underline ml-1 hover:text-[#295F9A] transition-colors">ISI Shop</a>, where all proceeds enable ISI to continue sharing knowledge online free of charge.
-                </p>
-              </section>
-
-              {/* Philosophy */}
-              <section className="space-y-4 mb-8">
-                <h2 className="text-xl font-semibold text-gray-900">Informing Science Institute Philosophy</h2>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  The Informing Science Institute is a mentoring organization. One of the Informing Science Institute’s
-                  core principles is helping our colleagues to become better and better: better as an author, as a
-                  reviewer, as an editor, and as an editor-in-chief. We use the peer review process of our journals to
-                  support other colleagues by providing them with constructive suggestions on ways to improve their
-                  work even if a submitted article is not accepted for publication. Our Editors-in-Chief assist
-                  reviewers and editors by being coaches and guides to the authors, reviewers, and editors.
-                </p>
-              </section>
-
-              {/* Research Topics */}
-              <section className="space-y-4 mb-8">
-                <h2 className="text-xl font-semibold text-gray-900">ISI Research Topics</h2>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  ISI encourages the sharing of knowledge and collaboration among the wide variety of fields, often using
-                  information technology to advance the multidisciplinary study of informing science. These areas can
-                  include Business, Communications, Communicating Meaning, Communication and Society, Computer Science,
-                  Data Management, Distance Education, eCommerce, Education, eLearning, Government, Health Care,
-                  History, Information and Library Science, Journalism, Justice and Law, Mathematics, Management,
-                  Philosophical Issues, Psychology, Public Policy, Sociology, and Human Resources.
-                </p>
-                <p className="text-sm text-[#3E3232]">
-                  <a href="http://www.inform.nu/Articles/Vol12/ISJv12p001-015Cohen399.pdf" className="text-[#4282C8] underline hover:text-[#295F9A] transition-colors">A Philosophy of Informing Science</a>
-                </p>
-              </section>
-
-              {/* How it works */}
-              <section className="space-y-4 mb-10">
-                <h2 className="text-xl font-semibold text-gray-900">How It Works</h2>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  Anyone can join the ISI Community of Scholars as a colleague for free. This enables you to submit an
-                  article for review and to request joining the International Board of Reviewers for any of our journals
-                  or conferences. We encourage all ISI Associate to become ISI Members to enhance their membership fee.
-                  The membership fee enables free online access to our journals. ISI Members receive additional benefits
-                  such as discounts on ISI products and services and access to the ISI Member Directory.
-                </p>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  One of the many benefits from being an ISI member is the ability to see other ISI members' profile
-                  summaries, ordered by how closely they match your own. This feature lets you locate potential research
-                  collaborators from around the globe. This members-only feature makes you a better-connected colleague.
-                </p>
-                <p className="text-[#3E3232] text-sm leading-6">
-                  Only after a paper has been reviewed and accepted for publication do we require that the corresponding
-                  author become an ISI Member, or alternatively, pay a fee equal to the membership fee.
-                </p>
-              </section>
-
-              <a href="/join-isi" className="inline-block px-10 py-2 rounded-[6px] text-white hover:opacity-90 transition-colors" style={{ backgroundColor: '#FF4C7D' }}>
+              <a href="/join-isi" className="inline-block px-10 py-2 rounded-[6px] text-white hover:opacity-90 transition-colors mt-6" style={{ backgroundColor: '#FF4C7D' }}>
                 Join ISI
               </a>
             </div>
