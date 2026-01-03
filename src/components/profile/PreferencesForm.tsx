@@ -1,20 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { z } from "zod";
+// import { z } from "zod";
+import * as z from "zod";
 import { apiService, cookieUtils } from "../../services";
-import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
 const preferencesSchema = z.object({
   unsubscribeNewsletters: z.boolean(),
   allowBasicProfile: z.boolean(),
-  websiteURL: z.string().url("Please enter a valid URL").optional(),
-  twitterURL: z.string().url("Please enter a valid URL").optional(),
-  facebookURL: z.string().url("Please enter a valid URL").optional(),
-  googlePlusURL: z.string().url("Please enter a valid URL").optional(),
-  linkedinURL: z.string().url("Please enter a valid URL").optional(),
+  websiteURL: z.string().optional().refine((val) => val === undefined || val === "" || /^https?:\/\/.+/.test(val), { message: "Please enter a valid URL" }),
+  twitterURL: z.string().optional().refine((val) => val === undefined || val === "" || /^https?:\/\/.+/.test(val), { message: "Please enter a valid URL" }),
+  // facebookURL: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  facebookURL: z.string().optional().refine((val) => val === undefined || val === "" || /^https?:\/\/.+/.test(val), { message: "Please enter a valid URL" }),
+  googlePlusURL: z.string().optional().refine((val) => val === undefined || val === "" || /^https?:\/\/.+/.test(val), { message: "Please enter a valid URL" }),
+  linkedinURL: z.string().optional().refine((val) => val === undefined || val === "" || /^https?:\/\/.+/.test(val), { message: "Please enter a valid URL" }),
 });
 
 type PreferencesFormData = z.infer<typeof preferencesSchema>;
@@ -46,14 +48,14 @@ const PreferencesForm: React.FC = () => {
   });
 
   const token =
-      cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
-      cookieUtils.getCookie("authToken");
-  
-    let decoded: any = {};
-    if (token) {
-      decoded = jwtDecode(token);
-      console.log("Decoded Token:", decoded);
-    }
+    cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+    cookieUtils.getCookie("authToken");
+
+  let decoded: any = {};
+  if (token) {
+    decoded = jwtDecode(token);
+    console.log("Decoded Token:", decoded);
+  }
 
   useEffect(() => {
     if (userId) {
@@ -70,7 +72,6 @@ const PreferencesForm: React.FC = () => {
         params: { userId: decoded.userId },
       });
       const data = response.data?.response || response;
-
       // Prefill form
       setValue("unsubscribeNewsletters", data.unsubscribe ?? false);
       setValue("allowBasicProfile", data.allowProfile ?? true);
@@ -100,7 +101,7 @@ const PreferencesForm: React.FC = () => {
     }
 
     const payload = {
-      userId:decoded.userId,
+      userId: decoded.userId,
       unsubscribe: data.unsubscribeNewsletters,
       allowProfile: data.allowBasicProfile,
       websiteUrl: data.websiteURL || "",
@@ -136,7 +137,14 @@ const PreferencesForm: React.FC = () => {
   return (
     <div className="bg-white">
       {isFetchingData && (
-        <div className="text-center text-[#FF4C7D] mb-4">Loading preferences...</div>
+        <div className="absolute inset-0 bg-opacity-80 flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-[#295F9A] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#295F9A] font-medium">
+              {isFetchingData ? "Loading preferences..." : "Saving changes..."}
+            </p>
+          </div>
+        </div>
       )}
 
       <div className="space-y-8">
@@ -203,9 +211,9 @@ const PreferencesForm: React.FC = () => {
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
               />
-              {errors.websiteURL && touchedFields.websiteURL && (
+              {/* {errors.websiteURL && touchedFields.websiteURL && (
                 <p className="text-red-500 text-xs mt-1">{errors.websiteURL.message}</p>
-              )}
+              )} */}
             </div>
 
             <div className="flex-1">
@@ -219,9 +227,9 @@ const PreferencesForm: React.FC = () => {
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
               />
-              {errors.twitterURL && touchedFields.twitterURL && (
+              {/* {errors.twitterURL && touchedFields.twitterURL && (
                 <p className="text-red-500 text-xs mt-1">{errors.twitterURL.message}</p>
-              )}
+              )} */}
             </div>
 
             <div className="flex-1">
@@ -235,9 +243,9 @@ const PreferencesForm: React.FC = () => {
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
               />
-              {errors.facebookURL && touchedFields.facebookURL && (
+              {/* {errors.facebookURL && touchedFields.facebookURL && (
                 <p className="text-red-500 text-xs mt-1">{errors.facebookURL.message}</p>
-              )}
+              )} */}
             </div>
           </div>
 

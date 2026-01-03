@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { apiService, cookieUtils } from "../../services";
-import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
 const personalInfoSchema = z.object({
@@ -122,14 +122,14 @@ const PersonalInfoForm: React.FC = () => {
     }
   };
 
-  const handleCancel = () => {
-    reset();
-    setPhotoFile(null);
-    setPhotoPreview("");
-    if (userId) {
-      fetchUserProfile();
-    }
-  };
+  // const handleCancel = () => {
+  //   reset();
+  //   setPhotoFile(null);
+  //   setPhotoPreview("");
+  //   if (userId) {
+  //     fetchUserProfile();
+  //   }
+  // };
 
   const onSubmit = async (data: PersonalInfoFormData) => {
     // if (!userId) {
@@ -155,10 +155,11 @@ const PersonalInfoForm: React.FC = () => {
       if (photoFile) {
         try {
           const uploadResponse = await apiService.uploadFile(
-            "/upload/profile-pic",
+            "/mediaUpload",
             photoFile
           );
-          profilePicUrl = uploadResponse.url || "";
+          console.log("uploadResponse :", uploadResponse);
+          profilePicUrl = uploadResponse?.data?.response.mediaUrl || "";
         } catch (uploadErr) {
           console.error("Photo upload failed:", uploadErr);
         }
@@ -202,8 +203,13 @@ const PersonalInfoForm: React.FC = () => {
   return (
     <div className="bg-white p-6">
       {isFetching && (
-        <div className="text-center text-[#295F9A] mb-4">
-          Loading profile...
+        <div className="absolute inset-0 bg-opacity-80 flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-[#295F9A] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#295F9A] font-medium">
+              {isFetching ? "Loading profile..." : "Saving changes..."}
+            </p>
+          </div>
         </div>
       )}
 
@@ -221,29 +227,53 @@ const PersonalInfoForm: React.FC = () => {
               <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
                 Personal Title
               </label>
-              <input
+              {/* <input
                 type="text"
                 {...register("personalTitle")}
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
-              />
-              {errors.personalTitle && touchedFields.personalTitle && (
+              /> */}
+              <select
+                {...register("personalTitle")}
+                disabled={isLoading}
+                className={`w-full bg-[#FAFAFA] border border-gray-300 rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-400 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+              >
+
+                <option value=""></option>
+                <option value="Mr">Mr</option>
+                <option value="Ms">Ms</option>
+                <option value="Dr">Dr</option>
+                <option value="Prof">Prof</option>
+              </select>
+              {/* {errors.personalTitle && touchedFields.personalTitle && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.personalTitle.message}
                 </p>
-              )}
+              )} */}
             </div>
 
             <div>
               <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
                 Gender
               </label>
-              <input
+              <select
+                {...register("gender")}
+                disabled={isLoading}
+                className={`w-full bg-[#FAFAFA] border border-gray-300 rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-400 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+              >
+                <option value=""></option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              {/* <input
                 type="text"
                 {...register("gender")}
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
-              />
+              /> */}
               {errors.gender && touchedFields.gender && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.gender.message}
@@ -500,9 +530,11 @@ const PersonalInfoForm: React.FC = () => {
             </div>
           </div>
         </div>
-
+        <div className="text-center mt-6 pt-6">
+          <button onClick={handleFormSubmit} className="px-12 py-3 rounded-[14px] text-white text-[16px] font-medium" style={{ backgroundColor: '#FF4C7D' }}>Next</button>
+        </div>
         {/* Action Buttons */}
-        <div className="flex gap-4 pt-4">
+        {/* <div className="flex gap-4 pt-4">
           <button
             onClick={handleFormSubmit}
             disabled={isLoading}
@@ -517,7 +549,7 @@ const PersonalInfoForm: React.FC = () => {
           >
             Cancel
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

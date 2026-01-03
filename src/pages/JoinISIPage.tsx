@@ -548,7 +548,7 @@ const JoinISIPage: React.FC = () => {
       const payload = {
         ...rest,
         // ...(rest.paymentType !== "FREE" && plan ? { planId: PLAN_IDS[plan] } : {}),
-        ...(rest.paymentType !== "FREE" ? { planId: getPlanId(plan) } : {}),
+        ...(rest.paymentType !== "FREE" ? { paymentType: "MEMBER", planId: getPlanId(plan) } : {}),
       };
       const response = await apiService.post("/user/", payload);
       console.log("API updated response :", response);

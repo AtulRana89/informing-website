@@ -1,44 +1,45 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jwtDecode } from "jwt-decode";
+import { Eye, EyeOff } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { apiService, cookieUtils } from "../../services";
-import { jwtDecode } from "jwt-decode";
-import { Eye, EyeOff } from "lucide-react";
 
 // Zod Schema
 const accountInfoSchema = z
   .object({
     primaryEmail: z.string().email("Please enter a valid email address"),
     receivePrimaryEmails: z.boolean(),
-    secondaryEmail: z
-      .string()
-      .email("Please enter a valid email address")
-      .optional(),
+    // secondaryEmail: z
+    //   .string()
+    //   .email("Please enter a valid email address")
+    //   .optional(),
+    secondaryEmail: z.string().optional(),
     receiveSecondaryEmails: z.boolean(),
     currentPassword: z.string().optional(),
-    newPassword: z.string().optional(),
+    // newPassword: z.string().optional(),
     confirmPassword: z.string().optional(),
     memberUntil: z.string().optional(),
   })
   .refine(
     (data) => {
       // If current password is provided, new password must also be provided
-      if (data.currentPassword && !data.newPassword) {
+      if (data.currentPassword && !data.confirmPassword) {
         return false;
       }
       return true;
     },
     {
-      message: "New password is required when changing password",
-      path: ["newPassword"],
+      message: "confirm password is required when changing password",
+      path: ["confirmPassword"],
     }
   )
   .refine(
     (data) => {
       // If new password is provided, it must match confirm password
-      if (data.newPassword && data.newPassword !== data.confirmPassword) {
+      if (data.currentPassword && data.currentPassword !== data.confirmPassword) {
         return false;
       }
       return true;
@@ -59,7 +60,7 @@ const AccountInfoForm: React.FC = () => {
   const [apiError, setApiError] = useState("");
   const userId = "user123"; // Replace with actual userId
   const [showPassword, setShowPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
+  // const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
@@ -78,7 +79,7 @@ const AccountInfoForm: React.FC = () => {
       secondaryEmail: "",
       receiveSecondaryEmails: false,
       currentPassword: "",
-      newPassword: "",
+      // newPassword: "",
       confirmPassword: "",
       memberUntil: "",
     },
@@ -95,7 +96,7 @@ const AccountInfoForm: React.FC = () => {
   }
 
   const currentPassword = watch("currentPassword");
-  const newPassword = watch("newPassword");
+  // const newPassword = watch("newPassword");
 
   useEffect(() => {
     fetchUserProfile();
@@ -155,9 +156,8 @@ const AccountInfoForm: React.FC = () => {
       };
 
       // Only include password fields if changing password
-      if (data.currentPassword && data.newPassword) {
-        updatePayload.currentPassword = data.currentPassword;
-        updatePayload.newPassword = data.newPassword;
+      if (data.currentPassword && data.currentPassword) {
+        updatePayload.changePassword = data.currentPassword;
       }
 
       console.log("Updating account with payload:", updatePayload);
@@ -168,7 +168,6 @@ const AccountInfoForm: React.FC = () => {
       // Clear password fields after successful update
       if (data.currentPassword) {
         setValue("currentPassword", "");
-        setValue("newPassword", "");
         setValue("confirmPassword", "");
       }
     } catch (err: any) {
@@ -189,8 +188,14 @@ const AccountInfoForm: React.FC = () => {
   return (
     <div className="bg-white">
       {isFetching && (
-        <div className="text-center text-[#FF4C7D] mb-4">
-          Loading account info...
+        // <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-50 rounded-lg">
+        <div className="absolute inset-0 bg-opacity-80 flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-[#295F9A] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#295F9A] font-medium">
+              {isFetching ? "Loading account info..." : "Saving changes..."}
+            </p>
+          </div>
         </div>
       )}
 
@@ -240,11 +245,11 @@ const AccountInfoForm: React.FC = () => {
               className="w-full h-10 rounded-md border-0 px-3"
               style={{ backgroundColor: "#F5F5F5" }}
             />
-            {errors.secondaryEmail && touchedFields.secondaryEmail && (
+            {/* {errors.secondaryEmail && touchedFields.secondaryEmail && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.secondaryEmail.message}
               </p>
-            )}
+            )} */}
             <label className="flex items-center gap-2 text-sm mt-2">
               <input
                 type="checkbox"
@@ -288,41 +293,8 @@ const AccountInfoForm: React.FC = () => {
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* New Password */}
-          <div>
-            <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
-              New Password
-            </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                {...register("newPassword")}
-                placeholder="New password"
-                className="w-full h-10 rounded-md border-0 px-3 pr-10"
-                style={{ backgroundColor: "#F5F5F5" }}
-                disabled={!currentPassword}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 disabled:opacity-50"
-                disabled={!currentPassword}
-              >
-                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-
-            {errors.newPassword && touchedFields.newPassword && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.newPassword.message}
-              </p>
-            )}
-          </div>
-
-          {/* Confirm Password */}
           <div>
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
               Type Your New Password Again
@@ -335,14 +307,14 @@ const AccountInfoForm: React.FC = () => {
                 placeholder="Confirm password"
                 className="w-full h-10 rounded-md border-0 px-3 pr-10"
                 style={{ backgroundColor: "#F5F5F5" }}
-                disabled={!newPassword}
+              // disabled={!newPassword}
               />
 
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 disabled:opacity-50"
-                disabled={!newPassword}
+              // disabled={!newPassword}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -379,12 +351,12 @@ const AccountInfoForm: React.FC = () => {
         </div>
 
         {/* Password Change Info */}
-        {currentPassword && (
+        {/* {currentPassword && (
           <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-sm">
             <strong>Note:</strong> To change your password, please enter your
             current password, new password, and confirm the new password.
           </div>
-        )}
+        )} */}
 
         {/* Buttons */}
         <div className="flex justify-center gap-4 pt-8">

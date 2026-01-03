@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { apiService, cookieUtils } from "../../services";
-import { jwtDecode } from "jwt-decode";
 
 // Types
 interface SubTopic {
@@ -59,14 +59,14 @@ const TopicsForm: React.FC = () => {
   });
 
   const token =
-      cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
-      cookieUtils.getCookie("authToken");
-  
-    let decoded: any = {};
-    if (token) {
-      decoded = jwtDecode(token);
-      console.log("Decoded Token:", decoded);
-    }
+    cookieUtils.getCookie("COOKIES_USER_ACCESS_TOKEN") ||
+    cookieUtils.getCookie("authToken");
+
+  let decoded: any = {};
+  if (token) {
+    decoded = jwtDecode(token);
+    console.log("Decoded Token:", decoded);
+  }
 
   useEffect(() => {
     fetchTopics();
@@ -189,7 +189,14 @@ const TopicsForm: React.FC = () => {
   return (
     <div className="bg-white">
       {isFetching && (
-        <div className="text-center text-[#FF4C7D] mb-4">Loading topics...</div>
+        <div className="absolute inset-0 bg-opacity-80 flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-[#295F9A] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#295F9A] font-medium">
+              {isFetching ? "Loading topics..." : "Saving changes..."}
+            </p>
+          </div>
+        </div>
       )}
 
       {errors.selectedTopics && (
@@ -286,7 +293,7 @@ const TopicsForm: React.FC = () => {
                 {selectedTopics.map((topic) => (
                   <div
                     key={topic}
-                    className="text-sm font-medium text-[#3E3232] p-3 rounded-[8px] bg-white"
+                    className="text-sm font-medium text-[#3E3232] p-3 rounded-[8px]"
                   >
                     {topic}
                   </div>

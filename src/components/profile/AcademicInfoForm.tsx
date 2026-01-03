@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { apiService, cookieUtils } from "../../services";
-import { jwtDecode } from "jwt-decode";
 
 // Zod Schema
 const academicInfoSchema = z.object({
@@ -82,6 +82,8 @@ const AcademicInfoForm: React.FC = () => {
   const [cvFileName, setCvFileName] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>("");
   const userId = "user123"; // Replace with actual userId
 
   const {
@@ -119,20 +121,20 @@ const AcademicInfoForm: React.FC = () => {
   }
 
   useEffect(() => {
-   
-      fetchUserProfile();
-   
+
+    fetchUserProfile();
+
   }, []);
 
   const fetchUserProfile = async () => {
     setIsFetchingData(true);
     try {
-      
+
       const response = await apiService.get(`/user/profile`, {
         params: { userId: decoded.userId },
       });
 
-      
+
       console.log("Profile data received:", response);
       const data = response.data?.response || response;
 
@@ -157,31 +159,44 @@ const AcademicInfoForm: React.FC = () => {
     }
   };
 
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+
+  //     // Validate file size (2MB max)
+  //     if (file.size > 2 * 1024 * 1024) {
+  //       toast.error("File size must be less than 2MB");
+  //       e.target.value = "";
+  //       return;
+  //     }
+
+  //     // Validate file type
+  //     const allowedTypes = [
+  //       "application/pdf",
+  //       "application/msword",
+  //       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  //     ];
+  //     if (!allowedTypes.includes(file.type)) {
+  //       toast.error("Only PDF and Word documents are allowed");
+  //       e.target.value = "";
+  //       return;
+  //     }
+
+  //     setCvFileName(file.name);
+  //     setValue("resume", file);
+  //   }
+  // };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-
-      // Validate file size (2MB max)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File size must be less than 2MB");
-        e.target.value = "";
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Only PDF and Word documents are allowed");
-        e.target.value = "";
-        return;
-      }
-
+      setPhotoFile(file);
       setCvFileName(file.name);
-      setValue("resume", file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -204,6 +219,29 @@ const AcademicInfoForm: React.FC = () => {
     setIsLoading(true);
     try {
       // Prepare payload with only the fields from this form
+
+      // If resume file exists, handle file upload
+      // if (data.resume && data.resume instanceof File) {
+      //   payload.resume = data.resume.name;
+      //   // TODO: Implement file upload if your API supports it
+      //   // const formData = new FormData();
+      //   // formData.append('resume', data.resume);
+      //   // await apiService.post('/user/upload-resume', formData);
+      // }
+      let profilePicUrl = photoPreview;
+      if (photoFile) {
+        try {
+          const uploadResponse = await apiService.uploadFile(
+            "/mediaUpload",
+            photoFile
+          );
+          console.log("uploadResponse :", uploadResponse);
+          profilePicUrl = uploadResponse?.data?.response.mediaUrl || "";
+        } catch (uploadErr) {
+          console.error("Photo upload failed:", uploadErr);
+        }
+      }
+
       const payload: any = {
         userId: decoded.userId,
         affiliationUniversity: data.affiliation,
@@ -211,16 +249,8 @@ const AcademicInfoForm: React.FC = () => {
         positionTitle: data.positionTitle || "",
         orcid: data.orcid || "",
         bio: data.shortBio || "",
+        resume: profilePicUrl
       };
-
-      // If resume file exists, handle file upload
-      if (data.resume && data.resume instanceof File) {
-        payload.resume = data.resume.name;
-        // TODO: Implement file upload if your API supports it
-        // const formData = new FormData();
-        // formData.append('resume', data.resume);
-        // await apiService.post('/user/upload-resume', formData);
-      }
 
       console.log("Updating user profile with payload:", payload);
       await apiService.put("/user/update", payload);
@@ -231,7 +261,7 @@ const AcademicInfoForm: React.FC = () => {
       console.error("Error updating academic info:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update academic information. Please try again."
+        "Failed to update academic information. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -246,8 +276,13 @@ const AcademicInfoForm: React.FC = () => {
   return (
     <div className="bg-white">
       {isFetchingData && (
-        <div className="text-center text-[#FF4C7D] mb-4">
-          Loading profile...
+        <div className="absolute inset-0 bg-opacity-80 flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-[#295F9A] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#295F9A] font-medium">
+              {isFetchingData ? "Loading profile..." : "Saving changes..."}
+            </p>
+          </div>
         </div>
       )}
 
@@ -329,7 +364,7 @@ const AcademicInfoForm: React.FC = () => {
           </div>
 
           {/* Address */}
-          <div>
+          {/* <div>
             <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
               Address
             </label>
@@ -344,10 +379,10 @@ const AcademicInfoForm: React.FC = () => {
                 {errors.academicAddress.message}
               </p>
             )}
-          </div>
+          </div> */}
 
           {/* Third Row */}
-          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+          {/* <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
             <div className="flex-1">
               <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
                 City
@@ -382,10 +417,10 @@ const AcademicInfoForm: React.FC = () => {
                   </p>
                 )}
             </div>
-          </div>
+          </div> */}
 
           {/* Fourth Row */}
-          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+          {/* <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
             <div className="flex-1">
               <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
                 Country
@@ -420,7 +455,7 @@ const AcademicInfoForm: React.FC = () => {
                   </p>
                 )}
             </div>
-          </div>
+          </div> */}
 
           {/* CV Upload */}
           <div>
