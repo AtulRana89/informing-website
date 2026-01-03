@@ -48,7 +48,8 @@ import SponsorUsPage from './pages/SponsorUsPage';
 import YourArticlesPage from './pages/YourArticlesPage';
 import YourReviewsPage from './pages/YourReviewsPage';
 
-
+// Import the success page component
+import PaypalSuccessPage from './pages/PaypalSuccessPage';
 
 function App() {
   return (
@@ -91,6 +92,11 @@ function App() {
           <Route path="/member/conferences" element={<MemberConferencesPage />} />
           <Route path="/member/membership-options" element={<MembershipOptionsPage />} />
 
+          {/* PayPal callback routes */}
+          <Route path="/paypal/success" element={<PaypalSuccessPage />} />
+          {/* <Route path="/paypal/cancel" element={<PaypalCancelPage />} /> */}
+          <Route path="/join-isi/success" element={<PaypalSuccessPage />} />
+          {/* <Route path="/join-isi/cancel" element={<PaypalCancelPage />} /> */}
           {/* Admin dashboard routes */}
           <Route path="/admin-dashboard" element={
             <ProtectedRoute requiredRoles={['admin', 'super-admin']}>

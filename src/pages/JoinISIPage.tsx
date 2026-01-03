@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useLocation, useNavigate } from 'react-router-dom';
 import * as z from "zod";
 import isiIcon from '../assets/images/isi-icon.png';
 import PublicFooter from '../components/PublicFooter';
@@ -91,42 +91,42 @@ const JoinISIPage: React.FC = () => {
 
   const location = useLocation();
 
-  useEffect(() => {
-    const handleSuccess = async () => {
-      const params = new URLSearchParams(location.search);
-      // alert(params)
-      console.log("params :", params)
-      const paymentId = params.get('paymentId');
-      const payerId = params.get('PayerID');
-      const token = params.get('token');
-      const subscriptionId = params.get('subscriptionId');
+  // useEffect(() => {
+  //   const handleSuccess = async () => {
+  //     const params = new URLSearchParams(location.search);
+  //     // alert(params)
+  //     console.log("params :", params)
+  //     const paymentId = params.get('paymentId');
+  //     const payerId = params.get('PayerID');
+  //     const token = params.get('token');
+  //     const subscriptionId = params.get('subscriptionId');
 
-      try {
-        // Verify payment with backend
-        if (paymentId && payerId) {
-          await apiService.post("/user/verify-payment", {
-            paymentId,
-            payerId,
-            token,
-            subscriptionId
-          });
-        }
+  //     try {
+  //       // Verify payment with backend
+  //       if (paymentId && payerId) {
+  //         await apiService.post("/user/verify-payment", {
+  //           paymentId,
+  //           payerId,
+  //           token,
+  //           subscriptionId
+  //         });
+  //       }
 
-        // Show success message in session storage to pass to join page
-        sessionStorage.setItem('paymentSuccess', 'true');
-        sessionStorage.setItem('subscriptionId', subscriptionId || '');
+  //       // Show success message in session storage to pass to join page
+  //       sessionStorage.setItem('paymentSuccess', 'true');
+  //       sessionStorage.setItem('subscriptionId', subscriptionId || '');
 
-        // Redirect to join-isi page
-        navigate('/join-isi');
+  //       // Redirect to join-isi page
+  //       navigate('/join-isi');
 
-      } catch (error) {
-        console.error("Payment verification error:", error);
-        navigate('/join-isi');
-      }
-    };
+  //     } catch (error) {
+  //       console.error("Payment verification error:", error);
+  //       navigate('/join-isi');
+  //     }
+  //   };
 
-    handleSuccess();
-  }, [location, navigate]);
+  //   handleSuccess();
+  // }, [location, navigate]);
 
   useEffect(() => {
     const data: PayPalPlan[] = [
@@ -331,234 +331,6 @@ const JoinISIPage: React.FC = () => {
 
   useEffect(() => {
     // dispatch(fetchCombineJournals());
-    let list = [
-      {
-        "id": "P-98P507856D497622UNFETDNA",
-        "version": 1,
-        "product_id": "PROD-4KP56367VU896645C",
-        "name": "Basic - 1 Year",
-        "status": "ACTIVE",
-        "description": "Basic membership for 1 year",
-        "usage_type": "LICENSED",
-        "billing_cycles": [
-          {
-            "pricing_scheme": {
-              "version": 1,
-              "fixed_price": {
-                "currency_code": "USD",
-                "value": "75.0"
-              },
-              "create_time": "2025-12-22T11:55:32.000Z",
-              "update_time": "2025-12-22T11:55:32.000Z"
-            },
-            "frequency": {
-              "interval_unit": "YEAR",
-              "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 1
-          }
-        ],
-        "payment_preferences": {
-          "service_type": "PREPAID",
-          "auto_bill_outstanding": true,
-          "setup_fee": {
-            "currency_code": "USD",
-            "value": "0.0"
-          },
-          "setup_fee_failure_action": "CONTINUE",
-          "payment_failure_threshold": 3
-        },
-        "taxes": {
-          "percentage": "0.0",
-          "inclusive": false
-        },
-        "quantity_supported": false,
-        "payee": {
-          "merchant_id": "JA5LJSP4AEF6J",
-          "display_data": {
-            "business_email": "cs-sb-ueo2x47642986@business.example.com",
-            "business_phone": {
-              "country_code": "91",
-              "national_number": "+91 9520481068"
-            }
-          }
-        },
-        "create_time": "2025-12-22T11:55:32.000Z",
-        "update_time": "2025-12-22T11:55:32.000Z",
-        "links": [
-          {
-            "href": "https://api.sandbox.paypal.com/v1/billing/plans/P-98P507856D497622UNFETDNA",
-            "rel": "self",
-            "method": "GET",
-            "encType": "application/json"
-          }
-        ]
-      },
-      {
-        "id": "P-60U54129JF267354NNFETFXY",
-        "version": 1,
-        "product_id": "PROD-2J870760NC067493P",
-        "name": "Sponsoring - 1 Year",
-        "status": "ACTIVE",
-        "description": "Sponsoring membership for 1 year",
-        "usage_type": "LICENSED",
-        "billing_cycles": [
-          {
-            "pricing_scheme": {
-              "version": 1,
-              "fixed_price": {
-                "currency_code": "USD",
-                "value": "125.0"
-              },
-              "create_time": "2025-12-22T12:00:31.000Z",
-              "update_time": "2025-12-22T12:00:31.000Z"
-            },
-            "frequency": {
-              "interval_unit": "YEAR",
-              "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 1
-          }
-        ],
-        "payment_preferences": {
-          "service_type": "PREPAID",
-          "auto_bill_outstanding": true,
-          "setup_fee": {
-            "currency_code": "USD",
-            "value": "0.0"
-          },
-          "setup_fee_failure_action": "CONTINUE",
-          "payment_failure_threshold": 3
-        },
-        "taxes": {
-          "percentage": "0.0",
-          "inclusive": false
-        },
-        "quantity_supported": false,
-        "payee": {
-          "merchant_id": "JA5LJSP4AEF6J",
-          "display_data": {
-            "business_email": "cs-sb-ueo2x47642986@business.example.com"
-          }
-        },
-        "create_time": "2025-12-22T12:00:31.000Z",
-        "update_time": "2025-12-22T12:00:31.000Z",
-        "links": []
-      },
-      {
-        "id": "P-7GB94956Y9580284ANFETJOY",
-        "version": 1,
-        "product_id": "PROD-2J870760NC067493P",
-        "name": "Sponsoring - 5 Year",
-        "status": "ACTIVE",
-        "description": "Sponsoring membership for 5 year",
-        "usage_type": "LICENSED",
-        "billing_cycles": [
-          {
-            "pricing_scheme": {
-              "fixed_price": {
-                "currency_code": "USD",
-                "value": "500.0"
-              }
-            },
-            "frequency": {
-              "interval_unit": "YEAR",
-              "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 5
-          }
-        ],
-        "links": []
-      },
-      {
-        "id": "P-5VR93344AX120281NNFETKWY",
-        "version": 1,
-        "product_id": "PROD-2J870760NC067493P",
-        "name": "Sponsoring - Life",
-        "status": "ACTIVE",
-        "description": "Lifetime sponsoring membership",
-        "usage_type": "LICENSED",
-        "billing_cycles": [
-          {
-            "pricing_scheme": {
-              "fixed_price": {
-                "currency_code": "USD",
-                "value": "5000.0"
-              }
-            },
-            "frequency": {
-              "interval_unit": "YEAR",
-              "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 99
-          }
-        ],
-        "links": []
-      },
-      {
-        "id": "P-3C184425140228839NFETLEY",
-        "version": 1,
-        "product_id": "PROD-4KP56367VU896645C",
-        "name": "Basic - Life",
-        "status": "ACTIVE",
-        "description": "Basic sponsoring membership",
-        "usage_type": "LICENSED",
-        "billing_cycles": [
-          {
-            "pricing_scheme": {
-              "fixed_price": {
-                "currency_code": "USD",
-                "value": "1000.0"
-              }
-            },
-            "frequency": {
-              "interval_unit": "YEAR",
-              "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 99
-          }
-        ],
-        "links": []
-      },
-      {
-        "id": "P-4G4391977B902291XNFETLNI",
-        "version": 1,
-        "product_id": "PROD-4KP56367VU896645C",
-        "name": "Basic - 5 Year",
-        "status": "ACTIVE",
-        "description": "Basic membership for 5 years",
-        "usage_type": "LICENSED",
-        "billing_cycles": [
-          {
-            "pricing_scheme": {
-              "fixed_price": {
-                "currency_code": "USD",
-                "value": "300.0"
-              }
-            },
-            "frequency": {
-              "interval_unit": "YEAR",
-              "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 5
-          }
-        ],
-        "links": []
-      }
-    ];
-    console.log("Fetched combine journals :", list);
   }, []);
 
   const PLAN_IDS = {
@@ -579,16 +351,16 @@ const JoinISIPage: React.FC = () => {
     if (selectedMembershipType === "FREE") {
       return "FREE";
     }
-    
+
     if (!plan) {
       return "FREE";
     }
-    
+
     // Check if plan is sponsoring type
     if (plan.includes("sponsor")) {
       return "SPONSORING";
     }
-    
+
     // Otherwise it's a basic plan
     return "BASIC";
   };
@@ -608,15 +380,22 @@ const JoinISIPage: React.FC = () => {
       const membershipType = getMembershipType();
       const payload = {
         ...rest,
-        membershipType,
-        ...(selectedMembershipType !== "FREE" ? { paymentType: "MEMBER", planId: getPlanId(plan) } : { paymentType: "FREE" }),
+        // membershipType,
+        ...(selectedMembershipType !== "FREE" ? { paymentType: membershipType, planId: getPlanId(plan) } : { paymentType: "FREE" }),
       };
       const response = await apiService.post("/user/", payload);
       console.log("API updated response :", response);
-      
-      // Navigate to /about after successful signup for both free and paid memberships
-      toast.success("Sign up successful!");
-      navigate("/about");
+      if (selectedMembershipType !== "FREE") {
+        // Redirect to PayPal subscription page
+        // const subscriptionId = response.data.subscriptionId;
+        const paypalSubscriptionUrl = response.data.response?.approvalUrl;
+        // window.location.href = paypalSubscriptionUrl;
+        window.open(paypalSubscriptionUrl, '_blank');
+      } else {
+        // Navigate to /about after successful signup for both free and paid memberships
+        toast.success("Sign up successful!");
+        navigate("/about");
+      }
 
       // toast.success("user updated succesfully");
     } catch (error: any) {
@@ -775,11 +554,10 @@ const JoinISIPage: React.FC = () => {
               {/* Pricing cards (reuse Community styles) */}
               <div className="pt-12 grid grid-cols-1 md:grid-cols-2 justify-center items-stretch gap-12 mt-12 max-w-[900px] mx-auto">
                 {/* Associate */}
-                <div 
+                <div
                   onClick={() => setSelectedMembershipType('FREE')}
-                  className={`shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col cursor-pointer transition-all ${
-                    selectedMembershipType === 'FREE' ? 'ring-2 ring-[#295F9A] bg-[#295f9a15]' : ''
-                  }`}
+                  className={`shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col cursor-pointer transition-all ${selectedMembershipType === 'FREE' ? 'ring-2 ring-[#295F9A] bg-[#295f9a15]' : ''
+                    }`}
                 >
                   <div className="p-5 flex-1">
                     <div className="flex items-start justify-between">
@@ -800,11 +578,10 @@ const JoinISIPage: React.FC = () => {
                 </div>
 
                 {/* Member */}
-                <div 
+                <div
                   onClick={() => setSelectedMembershipType('MEMBER')}
-                  className={`shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col cursor-pointer transition-all ${
-                    selectedMembershipType === 'MEMBER' ? 'ring-2 ring-[#295F9A] bg-[#295f9a15]' : ''
-                  }`}
+                  className={`shadow-md overflow-hidden w-full max-w-[380px] mx-auto flex flex-col cursor-pointer transition-all ${selectedMembershipType === 'MEMBER' ? 'ring-2 ring-[#295F9A] bg-[#295f9a15]' : ''
+                    }`}
                 >
                   <div className="p-5 flex-1">
                     <div className="flex items-start justify-between">
