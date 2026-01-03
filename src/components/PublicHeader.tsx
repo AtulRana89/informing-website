@@ -20,17 +20,33 @@ const PublicHeader: React.FC<Props> = ({ onOpenMobile, onOpenLogin }) => {
   const [mobileJournalsOpen, setMobileJournalsOpen] = useState(false);
   const [mobileConferencesOpen, setMobileConferencesOpen] = useState(false);
 
-  const handleUserClick = () => {
-    // Check if user is logged in
-    const userToken = localStorage.getItem('userToken');
-    if (userToken) {
-      // User is logged in, navigate to profile edit
-      navigate('/profile-edit');
-    } else {
-      // User is not logged in, open login modal
-      setInternalLoginOpen(true);
+  const getCookie = (name: string): string | null => {
+    const cookies = document.cookie.split('; ');
+  
+    for (const cookie of cookies) {
+      const [key, value] = cookie.split('=');
+  
+      if (key === name) {
+        return value ?? null;
+      }
     }
+    return null;
   };
+
+
+  const handleUserClick = () => {
+  // Read token from cookie
+  const userToken = getCookie('authToken') 
+                 || getCookie('COOKIES_USER_ACCESS_TOKEN');
+
+  if (userToken) {
+    // User is logged in
+    navigate('/profile-edit');
+  } else {
+    // User is not logged in
+    setInternalLoginOpen(true);
+  }
+};
 
   
 

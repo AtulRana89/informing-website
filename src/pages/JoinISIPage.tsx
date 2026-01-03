@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useLocation, useNavigate } from 'react-router-dom';
 import * as z from "zod";
 import isiIcon from '../assets/images/isi-icon.png';
 import PublicFooter from '../components/PublicFooter';
@@ -90,7 +89,6 @@ const JoinISIPage: React.FC = () => {
     components: 'buttons',
   };
 
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
