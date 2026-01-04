@@ -40,7 +40,7 @@ export const cookieUtils = {
 // API Base URL
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "https://www.informingscience.fyi/api";
-  // process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+// process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 
 // Create axios instance WITHOUT withCredentials initially
@@ -144,7 +144,7 @@ apiClient.interceptors.response.use(
 
           // Redirect to login page
           if (window.location.pathname !== "/login") {
-            //window.location.href = "/admin/login";
+            window.location.href = "/about";
           }
           break;
 
