@@ -144,7 +144,7 @@ apiClient.interceptors.response.use(
 
           // Redirect to login page
           if (window.location.pathname !== "/login") {
-            window.location.href = "/about";
+            window.location.href = "/";
           }
           break;
 
@@ -341,7 +341,7 @@ export const authService = {
     cookieUtils.deleteCookie("COOKIES_USER_ACCESS_TOKEN");
     cookieUtils.deleteCookie("authToken");
     cookieUtils.deleteCookie("user");
-    window.location.href = "/admin/login";
+    window.location.href = "/";
   },
 };
 

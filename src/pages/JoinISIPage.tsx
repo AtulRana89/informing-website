@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
+import { Eye, EyeOff } from "lucide-react";
 import React, { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -80,6 +81,8 @@ const JoinISIPage: React.FC = () => {
   // const [plan, setPlan] = React.useState<'1y-basic' | '1y-sponsor' | '5y-basic' | '5y-sponsor' | 'life-basic' | 'life-sponsor'>('1y-basic');
   const [captchaCode, setCaptchaCode] = useState("7VJ7R1EE");
   const [selectedMembershipType, setSelectedMembershipType] = useState<'FREE' | 'MEMBER'>('FREE');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
   const paypalOptions = {
     clientId: "ATy1yaAt6LRPKybBgy6Yuy_pIKRSENq67tm7il2NpBlUPYznsI-JIDn_hE2UUvVj9U6t6HKXuwzYEmk1",
@@ -370,11 +373,11 @@ const JoinISIPage: React.FC = () => {
       toast.error("Please select a membership plan.");
       return;
     }
-    // if (data.captchaCode.toUpperCase() !== captchaCode) {
-    //   toast.error("Invalid captcha code. Please try again.");
-    //   generateCaptcha();
-    //   return;
-    // }
+    if (data.captchaCode.toUpperCase() !== captchaCode) {
+      toast.error("Invalid captcha code. Please try again.");
+      generateCaptcha();
+      return;
+    }
     try {
       const { isSubscribe, captchaCode, repeatPassword, ...rest } = data;
       const membershipType = getMembershipType();
@@ -389,8 +392,8 @@ const JoinISIPage: React.FC = () => {
         // Redirect to PayPal subscription page
         // const subscriptionId = response.data.subscriptionId;
         const paypalSubscriptionUrl = response.data.response?.approvalUrl;
-        // window.location.href = paypalSubscriptionUrl;
-        window.open(paypalSubscriptionUrl, '_blank');
+        window.location.href = paypalSubscriptionUrl;
+        // window.open(paypalSubscriptionUrl, '_blank');
       } else {
         // Navigate to /about after successful signup for both free and paid memberships
         toast.success("Sign up successful!");
@@ -513,7 +516,16 @@ const JoinISIPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
                     <div>
                       <label className="block text-xs text-[#3E3232]  font-semibold">Set Your Password <span className="font-normal">(8 Characters Or Longer)</span></label>
-                      <input {...register("password")} className="w-full h-10 rounded-md border-0 px-3" style={{ backgroundColor: '#F5F5F5' }} />
+                      <div className="relative">
+                        <input {...register("password")} type={showPassword ? "text" : "password"} className="w-full h-10 rounded-md border-0 px-3" style={{ backgroundColor: '#F5F5F5' }} />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        >
+                          {!showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       {errors.password && (
                         <p className="text-red-600 text-sm mt-1">
                           {errors.password.message}
@@ -522,7 +534,16 @@ const JoinISIPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-xs text-[#3E3232]  font-semibold">Repeat Password (Enter Password Again)</label>
-                      <input {...register("repeatPassword")} className="w-full h-10 rounded-md border-0 px-3" style={{ backgroundColor: '#F5F5F5' }} />
+                      <div className="relative">
+                        <input {...register("repeatPassword")} type={showRepeatPassword ? "text" : "password"} className="w-full h-10 rounded-md border-0 px-3" style={{ backgroundColor: '#F5F5F5' }} />
+                        <button
+                          type="button"
+                          onClick={() => setShowRepeatPassword(!showRepeatPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        >
+                          {!showRepeatPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       {errors.repeatPassword && (
                         <p className="text-red-600 text-sm mt-1">
                           {errors.repeatPassword.message}

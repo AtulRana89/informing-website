@@ -73,7 +73,7 @@ const LoginModal: React.FC<Props> = ({ open, onClose }) => {
       if (decoded?.role == "admin") {
         navigate("/member/dashboard");
       } else {
-        navigate("/about");
+        navigate("/");
       }
 
     } catch (err: any) {
@@ -170,7 +170,7 @@ const LoginModal: React.FC<Props> = ({ open, onClose }) => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-3 flex items-center text-black"
                   >
-                    {showPassword ? (
+                    {!showPassword ? (
                       <svg
                         className="w-5 h-5"
                         fill="none"
