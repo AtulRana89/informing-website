@@ -10,7 +10,7 @@ import isiIcon from '../assets/images/isi-icon.png';
 import PublicFooter from '../components/PublicFooter';
 import PublicHeader from '../components/PublicHeader';
 import { apiService } from "../services";
-
+import { countries } from "../../src/config/api";
 
 // Define the validation schema
 const createUserSchema = z
@@ -488,15 +488,36 @@ const JoinISIPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <label className="block text-xs text-[#3E3232] mb-3 font-semibold">Country</label>
-                      <input {...register("country")} className="w-full h-10 rounded-md border-0 px-3" style={{ backgroundColor: '#F5F5F5' }} />
-                      {errors.country && (
-                        <p className="text-red-600 text-xs mt-1">
-                          {errors.country.message}
-                        </p>
-                      )}
-                    </div>
+                  <div>
+                  <div>
+              <label className="block text-xs text-[#3E3232] mb-3 font-semibold">
+                Country *
+              </label>
+              <div className="relative">
+              <select
+  {...register("country")}
+  className="w-full h-10 rounded-md border-0 px-3 pr-8 appearance-none"
+  style={{ backgroundColor: "#F5F5F5" }}
+>
+  <option value="">Select Country</option>
+  {countries.map((country:any) => (
+    <option key={country.code} value={country.code}>
+      {country.name}
+    </option>
+  ))}
+</select>
+
+              </div>
+              {errors.country && (
+    <p className="text-red-600 text-xs mt-1">
+      {errors.country.message}
+    </p>
+  )}
+            </div>
+  
+
+
+</div>
                     <div className="md:col-span-2">
                       <label className="block text-xs text-[#3E3232] mb-3 font-semibold">Your Email <span className="font-normal">(We Will Send A Confirmation Email To This Account)</span></label>
                       <input {...register("email")} className="w-full h-10 rounded-md border-0 px-3" style={{ backgroundColor: '#F5F5F5' }} />

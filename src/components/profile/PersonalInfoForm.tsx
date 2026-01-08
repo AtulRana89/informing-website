@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { apiService, cookieUtils } from "../../services";
+import { countries } from "../../../src/config/api";
 
 // Zod Schema
 const personalInfoSchema = z.object({
@@ -476,17 +477,19 @@ const PersonalInfoForm: React.FC = () => {
                 Country *
               </label>
               <div className="relative">
-                <select
-                  {...register("country")}
-                  className="w-full h-10 rounded-md border-0 px-3 pr-8 appearance-none"
-                  style={{ backgroundColor: "#F5F5F5" }}
-                >
-                  <option value="">Select Country</option>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="UK">United Kingdom</option>
-                  <option value="AU">Australia</option>
-                </select>
+              <select
+  {...register("country")}
+  className="w-full h-10 rounded-md border-0 px-3 pr-8 appearance-none"
+  style={{ backgroundColor: "#F5F5F5" }}
+>
+  <option value="">Select Country</option>
+  {countries.map((country) => (
+    <option key={country.code} value={country.code}>
+      {country.name}
+    </option>
+  ))}
+</select>
+
               </div>
               {errors.country && touchedFields.country && (
                 <p className="text-red-500 text-xs mt-1">
@@ -500,7 +503,7 @@ const PersonalInfoForm: React.FC = () => {
                 Office Phone Number
               </label>
               <input
-                type="text"
+                type="number"
                 {...register("officePhone")}
                 className="w-full h-10 rounded-md border-0 px-3"
                 style={{ backgroundColor: "#F5F5F5" }}
@@ -517,7 +520,7 @@ const PersonalInfoForm: React.FC = () => {
                 Personal Phone Number
               </label>
               <input
-                type="text"
+                type="number"
                 {...register("personalPhone")}
                 className="w-full h-12 rounded-md border-0 px-4"
                 style={{ backgroundColor: "#F5F5F5" }}
@@ -531,7 +534,7 @@ const PersonalInfoForm: React.FC = () => {
           </div>
         </div>
         <div className="text-center mt-6 pt-6">
-          <button onClick={handleFormSubmit} className="px-12 py-3 rounded-[14px] text-white text-[16px] font-medium" style={{ backgroundColor: '#FF4C7D' }}>Next</button>
+          <button onClick={handleFormSubmit} className="px-12 py-3 rounded-[14px] text-white text-[16px] font-medium" style={{ backgroundColor: '#FF4C7D' }}>SAVE </button>
         </div>
         {/* Action Buttons */}
         {/* <div className="flex gap-4 pt-4">
